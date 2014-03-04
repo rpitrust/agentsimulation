@@ -9,14 +9,19 @@ import simplejson as sj
 import random
 import sys
 
-if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print "Usage: python runner.py config_file output_file"
-        sys.exit()
+def output(output_loc, is_slave, text):
+    if is_slave:
+        sock = socket.socket()
+        sock.connect((output_loc,2436))
+        sock.sendall (text)
+        sock.close()
+        
+    else:
+        f = open(output_loc,"w")
+        f.write (text)
+        f.close
 
-    config_file = sys.argv[1]
-    output_file = sys.argv[2]
-
+def run(config_file, output_loc, is_slave):
     random.seed(10)
 
     ## Read input configuration
@@ -25,10 +30,7 @@ if __name__ == '__main__':
     f.close()
 
     ## Set output configuration
-    f = open(output_file,"w")
-    f.write (sj.dumps(config))
-    f.write ('\n')
-    f.close()
+    output(output_loc, is_slave, sj.dumps(config) + '\n')
 
     num_steps = config['num_steps']
     num_trials = config['num_trials']
@@ -81,8 +83,13 @@ if __name__ == '__main__':
                                                                          inbox_trust_sorted, \
                                                                          trust_filter_on)
                                     
-                                    f = open(output_file,"a")
-                                    f.write( sj.dumps(results) )
-                                    f.write("\n")
-                                    f.close()
+                                    output(output_loc, is_slave, sj.dumps(results) + '\n' )
 
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print "Usage: python runner.py config_file output_file"
+        sys.exit()
+
+    config_file = sys.argv[1]
+    output_file = sys.argv[2]
+    run(config_file, output_file, False)
