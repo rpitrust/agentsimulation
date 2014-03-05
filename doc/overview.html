@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Overview of the Agent Simulation Package &mdash; Trust and Information Sharing Agent Simulation 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="overview-of-the-agent-simulation-package">
+<h1>Overview of the Agent Simulation Package<a class="headerlink" href="#overview-of-the-agent-simulation-package" title="Permalink to this headline">¶</a></h1>
+<p>This package implements an agent scenario in which agents share
+information with each other in a networked setting. The package
+incorporates many adjustable parameters that are easily extensible. We
+give an overview of these characteristics in this document.</p>
+<div class="section" id="agent-connectivity">
+<h2>Agent Connectivity<a class="headerlink" href="#agent-connectivity" title="Permalink to this headline">¶</a></h2>
+<p>Agents are connected to each other through a network that determines
+their connectivity. Each edge is currently of the same strength and/or
+bandwidth. The connectivity can be generated using different
+algorithms. Currently, we have two basic methods:</p>
+<ul class="simple">
+<li><strong>Random graphs</strong> (Erdos–Renyi) of a given connection probability</li>
+<li><strong>Spatial random graphs</strong> in which agents are distributed in a one by
+one grid. The connection prbability is then given by a radius. All
+nodes with distance within a given radius are connected.</li>
+<li><strong>Hierarchy</strong> implements a single hierarchy of three levels, leader
+(agent 0), second level managers and employees.</li>
+</ul>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">GraphGen</span></tt> module implements this function.</p>
+</div>
+<div class="section" id="agent-behavior-characteristics">
+<h2>Agent Behavior Characteristics<a class="headerlink" href="#agent-behavior-characteristics" title="Permalink to this headline">¶</a></h2>
+<p>Agents have characteristics that determine their behaviors. These
+characteristics are summarized below.</p>
+<ul class="simple">
+<li><strong>Competence</strong> describes the ability to discern signal from noise
+in information</li>
+<li><strong>Willingness</strong> describes the percentage of time the agent will
+perform an action. Willingness can model the reliability of the
+agent or the attention they can give to a specific problem.</li>
+<li><strong>Capacity</strong> describes the number of actions the agent is able to
+take at each step of the simulation, if it is willing. Capacity is
+set to 1 by default.</li>
+<li><strong>Spamminess</strong> describes the percentage of the time the agent will
+spam a neighbor by sending the same information. By default, agents
+do not spam.</li>
+<li><strong>Selfishness</strong> describes the percentage of the neighbors the agent
+will share information with, instead of keeping it to
+self. Selfishness describes whether agent will act in self-interest
+or in the interest of the network. Agents are not selfish by default.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Overview of the Agent Simulation Package</a><ul>
+<li><a class="reference internal" href="#agent-connectivity">Agent Connectivity</a></li>
+<li><a class="reference internal" href="#agent-behavior-characteristics">Agent Behavior Characteristics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/overview.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Sibel Adali.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
