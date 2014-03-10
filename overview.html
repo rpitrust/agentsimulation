@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" /> 
+    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" />
+    <link rel="prev" title="Agent Based Simulation of Information Sharing in Networks" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -32,6 +33,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Agent Based Simulation of Information Sharing in Networks"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -47,6 +51,9 @@
 information with each other in a networked setting. The package
 incorporates many adjustable parameters that are easily extensible. We
 give an overview of these characteristics in this document.</p>
+<p>The code is available on:</p>
+<blockquote>
+<div><a class="reference external" href="https://github.com/rpitrust/agentsimulation">https://github.com/rpitrust/agentsimulation</a></div></blockquote>
 <div class="section" id="agent-connectivity">
 <h2>Agent Connectivity<a class="headerlink" href="#agent-connectivity" title="Permalink to this headline">¶</a></h2>
 <p>Agents are connected to each other through a network that determines
@@ -61,7 +68,9 @@ nodes with distance within a given radius are connected.</li>
 <li><strong>Hierarchy</strong> implements a single hierarchy of three levels, leader
 (agent 0), second level managers and employees.</li>
 </ul>
-<p>The <tt class="xref py py-mod docutils literal"><span class="pre">GraphGen</span></tt> module implements this function.</p>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">GraphGen</span></tt> module implements this function:</p>
+<blockquote>
+<div><a class="reference external" href="https://github.com/rpitrust/agentsimulation/blob/master/GraphGen.py">https://github.com/rpitrust/agentsimulation/blob/master/GraphGen.py</a></div></blockquote>
 </div>
 <div class="section" id="agent-behavior-characteristics">
 <h2>Agent Behavior Characteristics<a class="headerlink" href="#agent-behavior-characteristics" title="Permalink to this headline">¶</a></h2>
@@ -83,7 +92,148 @@ do not spam.</li>
 will share information with, instead of keeping it to
 self. Selfishness describes whether agent will act in self-interest
 or in the interest of the network. Agents are not selfish by default.</li>
+<li><strong>Trust</strong> characteristics describe whether the agent uses trust to
+to filter who to send messages to (outbox filtering) and order messages
+from other agents (inbox sorting). The trust can be turned on (default)
+or off.</li>
+<li><strong>Spam sensitivity</strong> describes how much the agent considers spamming
+behavior of others as a measure of their incompetence axis of trust.
+Depending on the scenario, this can be adjusted. When set to zero,
+spamming of others does not effect the trust ratings.</li>
 </ul>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">Agent</span></tt> module sets these parameters.</p>
+<blockquote>
+<div><a class="reference external" href="https://github.com/rpitrust/agentsimulation/blob/master/Agent.py">https://github.com/rpitrust/agentsimulation/blob/master/Agent.py</a></div></blockquote>
+</div>
+<div class="section" id="trust">
+<h2>Trust<a class="headerlink" href="#trust" title="Permalink to this headline">¶</a></h2>
+<p>Agents can base their behavior based on trust. In this case, they need
+to assess their trust for others based on their prior trust and
+evidence. An agent&#8217;s trust belief for another agent consist of two
+components:</p>
+<ul>
+<li><p class="first"><strong>Competence</strong> is the belief that the other agent has the ability
+to distinguish signal from noise. The competence belief is given
+with a prior value, i.e. initial belief, and evidence obtained
+within the simulation. The initial belief is given by a trust value
+and associated uncertainty. If uncertainty is low, new evidence
+will have little effect in the given belief. The evaluation of
+evidence is tied to the agent&#8217;s competence: a person who can tell
+signal from noise can also better judge other agents&#8217; competence.</p>
+</li>
+<li><p class="first"><strong>Willingness</strong> is the belief that the other agent will dedicate
+their energy to sending the agent information, instead of helping
+others or serving self-interest. Willingness models rational
+reciprocal information sharing behavior. It is seeded with a prior
+belief and associated uncertainty. If uncertainty is very low,
+simulation based evidence has no effect on willingness
+beliefs. Unlike competence, willingness beliefs are relative to
+others. When there is no information to share, then agents share
+nothing. This does not impact the beliefs about their willingness
+negatively.</p>
+</li>
+<li><p class="first">Both beliefs are used to determine whether an agent can be
+trusted. Currently, the competence and willingness levels are used
+to determine a qualitative rating of trust, as given by the table
+below:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="29%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Comp &gt; 0.8</td>
+<td>T = 3</td>
+<td>T = 4</td>
+<td>T = 5</td>
+</tr>
+<tr class="row-even"><td>Comp &lt;=   0.8</td>
+<td>T = 3</td>
+<td>T = 4</td>
+<td>T = 4</td>
+</tr>
+<tr class="row-odd"><td>Comp &lt;=   0.6</td>
+<td>T = 1</td>
+<td>T = 2</td>
+<td>T = 2</td>
+</tr>
+<tr class="row-even"><td>0</td>
+<td>Will &lt;= 0.6</td>
+<td>Will
+&lt;= 0.8</td>
+<td>Will
+&gt; 0.8</td>
+</tr>
+</tbody>
+</table>
+<p>Note that the thresholds can be changed in the <tt class="xref py py-mod docutils literal"><span class="pre">Trust</span></tt>  module:</p>
+<p><a class="reference external" href="https://github.com/rpitrust/agentsimulation/blob/master/Trust.py">https://github.com/rpitrust/agentsimulation/blob/master/Trust.py</a></p>
+<p>In this case, trust values go from 5 (highest) to 1 (lowest). Trust
+value of 1 is considered not trust. We current do not model
+distrust in the simulation.</p>
+</li>
+</ul>
+<p>The trust module allows new evidence to be entered periodically and
+old evidence to be forgotten at a specified rate.</p>
+</div>
+<div class="section" id="simulation-method">
+<h2>Simulation Method<a class="headerlink" href="#simulation-method" title="Permalink to this headline">¶</a></h2>
+<p>Currently, the simulation environment models a scenario in which
+agents send information to each other. Originally, the network is
+seeded with some initial set of information. Each agent has access to
+some facts by having it in its inbox. Some of the information is
+valuable and some of it is noise. The signal to noise ratio can be
+changed.</p>
+<p>The agents in the model are limited. They can only do one action at a
+time (unless they explicitly have higher capacity). The main action
+that is implemented in the simulation is sharing of information in
+one&#8217;s inbox. At each point in time, if the agent is willing for that
+period, it can do one of two actions:</p>
+<ul>
+<li><p class="first">Send one piece of information that is in its outbox to a neighbor:
+from most trusted to the least trusted if trust is used, randomly
+otherwise.</p>
+</li>
+<li><p class="first">Pop one piece of information that is in its inbox, determine if it
+is valuable, and then queue it to be sent to all neighbors by
+placing it in its outbox.</p>
+<p>When determining whether information is valuable or not, the
+competence of the agent determines how frequently the agent will
+get it correctly.</p>
+<p>Then, the agent will decide who to send it to based on spamminess
+and selfishness parameters.</p>
+</li>
+</ul>
+<p>The simulation starts by processing all information that is in agents&#8217;
+inbox and placing them in their outbox based on their
+personalities. The agents are also seeded with initial trust if trust
+is used. The simulation then proceeds for a predetermined number of
+steps.</p>
+<p>Periodically a set of performance statistics area collected from the
+networked. These statistics are summarized at the end of the
+simulation. Simulations can be repeated for a number of prespecified
+times and the average performance is reported at the end.</p>
+<p>Performance statistics considered include:</p>
+<ul class="simple">
+<li><strong>Situation awareness (SA)</strong> is the average percentage of all valuable
+facts known to all the agents in the network.</li>
+<li><strong>Situation awareness single (SA-0)</strong> is the average percentage of
+all  valuable facts known to a specific agent in the network. This
+helps us model the case where only a single agent getting the
+relevant information is important. Often agent 0 is monitored for
+this purpose. Agent 0 is also the lead of the group in the
+hierarchy graph.</li>
+<li><strong>Communications</strong> is the total number of messages sent in the
+network. Communications are monitored as a function of the number
+of messages needed to reach a certain level of SA (or SA-0).</li>
+<li><strong>Steps</strong> is the total number of simulation steps needed to reach a
+certain level of SA (or SA-0).</li>
+</ul>
+<p>The simulation is implemented in the <tt class="xref py py-mod docutils literal"><span class="pre">simulation</span></tt> module:</p>
+<blockquote>
+<div><a class="reference external" href="https://github.com/rpitrust/agentsimulation/blob/master/simulation.py">https://github.com/rpitrust/agentsimulation/blob/master/simulation.py</a></div></blockquote>
 </div>
 </div>
 
@@ -98,10 +248,15 @@ or in the interest of the network. Agents are not selfish by default.</li>
 <li><a class="reference internal" href="#">Overview of the Agent Simulation Package</a><ul>
 <li><a class="reference internal" href="#agent-connectivity">Agent Connectivity</a></li>
 <li><a class="reference internal" href="#agent-behavior-characteristics">Agent Behavior Characteristics</a></li>
+<li><a class="reference internal" href="#trust">Trust</a></li>
+<li><a class="reference internal" href="#simulation-method">Simulation Method</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Agent Based Simulation of Information Sharing in Networks</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/overview.txt"
@@ -130,6 +285,9 @@ or in the interest of the network. Agents are not selfish by default.</li>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Agent Based Simulation of Information Sharing in Networks"
+             >previous</a> |</li>
         <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
       </ul>
     </div>

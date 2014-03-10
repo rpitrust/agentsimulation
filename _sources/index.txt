@@ -3,10 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Trust and Information Sharing Agent Simulation's documentation!
+Agent Based Simulation of Information Sharing in Networks
 ==========================================================================
 
-Contents:
+The codebase for this package can be found at:
+
+   https://github.com/rpitrust/agentsimulation
+
+Documentation:
 
 .. toctree::
    :maxdepth: 2
