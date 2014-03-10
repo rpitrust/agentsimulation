@@ -21,7 +21,7 @@ options. The simulation package requires:
 
 
 Running by configuration files
-================================
+---------------------------------
 
 It is possible to run the agent simulation with the help of a runner
 utility that makes use of a configuration file that sets various
@@ -78,7 +78,7 @@ The output is also a simplejson file listing results for each of the
 120 cases tested here.
 
 Running case by case
-=======================
+------------------------
 
 It is possible to run a single configuration of agent properties using
 tester code found in tester.py. This file shows how to use the
@@ -90,7 +90,7 @@ using::
 
 
 Further configuration of agent cases
-======================================
+-------------------------------------
 
 The above options do not make it possible to modify various
 characteristics of the agents, such as initial trust of specific
