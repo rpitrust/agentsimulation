@@ -16,7 +16,7 @@ Documentation:
    :maxdepth: 2
 
    overview
-
+   running
 
 Indices and tables
 ==================

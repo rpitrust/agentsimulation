@@ -19,6 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('/Users/sibeladali/SVN-Documents/GITHUB/agentsimulation_code'))
 
 # -- General configuration ------------------------------------------------
 
@@ -261,4 +262,5 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None, 'https://github.com/rpitrust/agentsimulation': 'agentsimulation'}
+intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None),
+                       'networkx': ('http://networkx.github.io/documentation/latest/',None)}

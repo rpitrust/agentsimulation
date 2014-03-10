@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running the agent simulation model &mdash; Trust and Information Sharing Agent Simulation 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" />
+    <link rel="prev" title="Overview of the Agent Simulation Package" href="overview.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="overview.html" title="Overview of the Agent Simulation Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="running-the-agent-simulation-model">
+<h1>Running the agent simulation model<a class="headerlink" href="#running-the-agent-simulation-model" title="Permalink to this headline">¶</a></h1>
+<p>There are alternate ways to run the simulation model. The methods go
+from easiest but less configurable to the most configurable
+options. The simulation package requires:</p>
+<ul>
+<li><p class="first">Python 2.7 (any Python 2 version should work, but it is only tested
+on 2.7)</p>
+</li>
+<li><p class="first">The <tt class="docutils literal"><span class="pre">networkx</span></tt> module, installable by easy_install:</p>
+<p><a class="reference external" href="http://networkx.github.io/documentation/latest/">http://networkx.github.io/documentation/latest/</a></p>
+</li>
+<li><p class="first">The <tt class="docutils literal"><span class="pre">simplejson</span></tt> module (only required for use in the runner
+module for the use of configuration files) , installable by
+easy_install:</p>
+<p><a class="reference external" href="http://simplejson.readthedocs.org/en/latest/">http://simplejson.readthedocs.org/en/latest/</a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="running-by-configuration-files">
+<h1>Running by configuration files<a class="headerlink" href="#running-by-configuration-files" title="Permalink to this headline">¶</a></h1>
+<p>It is possible to run the agent simulation with the help of a runner
+utility that makes use of a configuration file that sets various
+parameters. The input configuration is given in the simplejson format,
+and provides output in the simplejson format.</p>
+<p>Each configuration file the parameters to be varied in the given
+simulation series. To run, use:</p>
+<div class="highlight-python"><pre>python runner.py config_file output_file</pre>
+</div>
+<p>Example configuration file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+<span class="s">&quot;description&quot;</span><span class="p">:</span> <span class="s">&quot;Example file&quot;</span>
+<span class="p">,</span> <span class="s">&quot;num_facts&quot;</span>      <span class="p">:</span> <span class="p">[</span><span class="mi">50</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;num_noise&quot;</span>      <span class="p">:</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">5000</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;num_agents&quot;</span>     <span class="p">:</span> <span class="p">[</span><span class="mi">20</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;agent_per_fact&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;num_steps&quot;</span>      <span class="p">:</span> <span class="mi">10000</span>
+<span class="p">,</span> <span class="s">&quot;trust_used&quot;</span>     <span class="p">:</span> <span class="n">true</span>
+<span class="p">,</span> <span class="s">&quot;trust_filter_on&quot;</span>     <span class="p">:</span> <span class="n">true</span>
+<span class="p">,</span> <span class="s">&quot;inbox_trust_sorted&quot;</span> <span class="p">:</span> <span class="n">false</span>
+<span class="p">,</span> <span class="s">&quot;competence&quot;</span>     <span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">1.0</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;willingness&quot;</span>    <span class="p">:</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">1.0</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;spamminess&quot;</span>     <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.1</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;selfishness&quot;</span>    <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.8</span><span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;num_trials&quot;</span>     <span class="p">:</span> <span class="mi">20</span>
+<span class="p">,</span> <span class="s">&quot;graph_description&quot;</span> <span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span> <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;spatial_random&quot;</span>
+            <span class="p">,</span> <span class="s">&quot;radius&quot;</span> <span class="p">:</span> <span class="mf">0.5</span> <span class="p">}</span> <span class="p">]</span>
+<span class="p">,</span> <span class="s">&quot;agent_setup&quot;</span>    <span class="p">:</span> <span class="p">[</span>
+           <span class="p">[]</span>
+           <span class="p">,</span> <span class="p">[{</span> <span class="s">&quot;ratio&quot;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span> <span class="s">&quot;competence&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;willingness&quot;</span><span class="p">:</span><span class="mf">0.2</span> <span class="p">},</span>
+              <span class="p">{</span> <span class="s">&quot;ratio&quot;</span><span class="p">:</span><span class="mf">0.2</span><span class="p">,</span> <span class="s">&quot;selfishness&quot;</span><span class="p">:</span><span class="mf">0.4</span> <span class="p">}</span> <span class="p">]</span>
+           <span class="p">,</span> <span class="p">[{</span> <span class="s">&quot;ratio&quot;</span><span class="p">:</span><span class="mf">0.2</span><span class="p">,</span> <span class="s">&quot;competence&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;selfishness&quot;</span><span class="p">:</span><span class="mf">0.2</span> <span class="p">}]</span>
+          <span class="p">]</span>
+  <span class="p">}</span>
+</pre></div>
+</div>
+<p>In this file, various parameters are being varied for competence,
+willingness, spamminess and selfishness (a total of 5x2x2x2=40
+cases). For each case, a random subset of the agents can have varying
+characteristics given in the <tt class="docutils literal"><span class="pre">agent_setup</span></tt> parameters. We have three
+settings in this case, so a total of 120 different tests will be
+run. Each test will run 10,000 steps and will be repeated for 20
+times.</p>
+<p>Note that other parameters do not take as input list of values at this
+point.</p>
+<p>The output is also a simplejson file listing results for each of the
+120 cases tested here.</p>
+</div>
+<div class="section" id="running-case-by-case">
+<h1>Running case by case<a class="headerlink" href="#running-case-by-case" title="Permalink to this headline">¶</a></h1>
+<p>It is possible to run a single configuration of agent properties using
+tester code found in tester.py. This file shows how to use the
+simulation package for a specific configuration. For each
+configuration, a specific set of statistics can be printed. Run this
+using:</p>
+<div class="highlight-python"><pre>python tester.py</pre>
+</div>
+</div>
+<div class="section" id="further-configuration-of-agent-cases">
+<h1>Further configuration of agent cases<a class="headerlink" href="#further-configuration-of-agent-cases" title="Permalink to this headline">¶</a></h1>
+<p>The above options do not make it possible to modify various
+characteristics of the agents, such as initial trust of specific
+agents. These options are not currently exposed in the simulation
+module for ease of use. As a result, changing of the simulation code
+is required for such tests. More detailed information is available in
+the simulation module found in: <tt class="docutils literal"><span class="pre">simulation.py</span></tt>.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running the agent simulation model</a></li>
+<li><a class="reference internal" href="#running-by-configuration-files">Running by configuration files</a></li>
+<li><a class="reference internal" href="#running-case-by-case">Running case by case</a></li>
+<li><a class="reference internal" href="#further-configuration-of-agent-cases">Further configuration of agent cases</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview of the Agent Simulation Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/running.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="overview.html" title="Overview of the Agent Simulation Package"
+             >previous</a> |</li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Sibel Adali.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
