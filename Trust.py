@@ -6,11 +6,6 @@
     trustee is the trustee of the trust relation (assuming the source is
     known already.)
 
-    propensity is the propensity to trust, given by a value between
-    0-1. If propensity is high, then positive evidence is considered
-    more likely. If low, then negative evidence is considered more
-    likely. At 0.5, propensity has no effect.
-
     comp is given by a pair of true and untrue facts by a given
     person.
 
@@ -27,10 +22,8 @@ from simutil import *
 class Trust(object):
 
     def __init__ ( self , trustee, \
-                   prior_comp = ('M','M'), prior_will=('M','M'), \
-                   propensity=0.5):
+                   prior_comp = ('M','M'), prior_will=('M','M')):
         self.trustee = trustee ## trustee of the trust
-        self.propensity = propensity
         self.comp = self.initial_comp(prior_comp)
         self.will = self.initial_will(prior_will)
         self.comp_history = {}

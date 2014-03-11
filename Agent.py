@@ -1,20 +1,50 @@
 
-''' Contains the class code to generate Agents 
+"""
+    .. py:class:: Agent(w, c, numfacts, numnoise, spam, selfish, trust_used, inbox_trust_sorted, trust_filter_on, capacity, uses_knowledge)
 
-    willingness  describes how frequently an agent will act
-    competence   describes how well an agent will evaluate something
-                 are valuable or not correctly
-    
-    spammer      describes how frequently the agent will send the 
-                 same fact to the same person: 
-                 spammer=1 always, spammer=0 never
-    selfish      describes how frequently the agent will drop a fact
-                 and not send at all to a specific person:
-                 selfish=0 never, selfish=1 always
+    Class for generating and implementing Agents.
 
-    still left to do: 
-           1. do something about spamminess, currently we only keep stats
-'''
+    :param int numfacts: number of facts in the simulation 
+     that are valuable
+
+    :param int numnoise: number of facts in the simulation 
+     that are noise
+
+    :param float w: how frequently an agent will act
+
+    :param float c: how frequently the agent will a fact 
+     as valuable or not correctly (1: always, p: 
+     p% of the time)
+
+    :param float spam:  how frequently the agent will send the 
+     same fact to the same person (1 always, 0 never)
+
+    :param float selfish: how frequently the agent will drop 
+     a fact and not send at all to a specific person 
+     (0 never, 1 always)
+
+    :param int capacity: how many actions an agent can take 
+     at each simulation step, 1 by default to implement 
+     agents with limited cognitive resources.
+
+    :param Boolean trust_used: If True (default), keeps statistics 
+     about Trust and sorts outbox by how much each neighbor is trusted 
+ 
+    :param Boolean inbox_trust_sorted: If True (default), periodically
+     sorts the inbox by trust, processing facts from trusted neighbors
+     first
+
+    :param Boolean trust_filter_on: If True (default), it only sends
+     messages out to neighbors that are minimally trusted, the rest
+     are filtered out.
+
+    :param Boolean uses_knowledge: True (default) if agent uses
+     knowledge based processing and sends only facts it considers
+     valuable. If False: it sends all facts regardless of value, used
+     for hierarchical processing.
+
+
+"""
 
 import random 
 import Trust
@@ -25,7 +55,7 @@ class Agent(object):
     def __init__ (self, w=1, c=1, numfacts = 0, numnoise=0, \
                   spammer=0, selfish=0,  \
                   trust_used = True, inbox_trust_sorted = True, \
-                  trust_filter_on = True, capacity = 1):
+                  trust_filter_on = True, capacity = 1, uses_knowledge=True):
         ## General constants used in simulation
         self.NUM_FACTS = numfacts
         self.NUM_NOISE = numnoise
@@ -39,6 +69,9 @@ class Agent(object):
         self.spammer = spammer
         self.capacity = capacity
         self.trust_filter_on = trust_filter_on
+        self.uses_knowledge = uses_knowledge 
+        # for hierarchy, all facts are considered valuable without
+        # considering competence!
         self.spam_sensitivity = 0.2  # discount for spam behavior
         # how much spamming will be counted as negative competence evidence
 
@@ -53,6 +86,7 @@ class Agent(object):
         self.knowledge = set([]) ## id of all facts known, spam or valuable
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
+        self.trust_update_frequency = 10
 
         ## Network based properties, beliefs
         self.neighbors = set([])
@@ -70,15 +104,35 @@ class Agent(object):
         """ Add fact to knowledge. """
         self.knowledge.add(fact)
 
-    def connect_to(self, neighbors):
+    def connect_to(self, neighbors, \
+                   prior_comp = ('M','M'), \
+                   prior_will=('M','M')):
         """ 
+            Connects the agent to a set of other agents.
+
+            Example usage::
+
+                a.connect_to(neighbors, ('M','L'), ('H','H'))
+
             Create a link to all Agents in the set neighbors.
-            Initialize trust and spamminess statistics.
+            Initialize prior trust for all neighbors if prior
+            competence and willigness is given.
+
+            :param neighbors: a set of Agent objects
+             that are neighbors of the current Agent
+
+            :param prior_comp: prior competence
+             belief for all neighbors, given as a pair of belief and
+             uncertainty values, each one of 'L','M','H' for low
+             medium and high. See :mod:`Trust` for more details.
+
+            :param prior_will: prior competence
+             belief for all neighbors, same format as prior_comp.
 
         """
         self.neighbors = set(neighbors)
         for n in self.neighbors:
-            self.trust[n] = Trust.Trust(n)
+            self.trust[n] = Trust.Trust(n, prior_comp, prior_will)
             self.neighbor_spamminess[n] = 0
 
     def stat(self):
@@ -86,7 +140,11 @@ class Agent(object):
         return (len(self.knowledge), len(self.neighbors))
 
     def is_fact_valuable(self,fact):
-        """ Return the ground truth of whether the fact is valuable. """
+        """ Return the ground truth of whether the fact is
+        valuable. """
+        if not (self.uses_knowledge): 
+        ##always think everything is valuable, used for hierarchies
+            return True
         if (0 <= fact < self.NUM_FACTS):
             return True
         elif (self.NUM_FACTS <= fact < (self.NUM_FACTS + self.NUM_NOISE)):
@@ -99,6 +157,7 @@ class Agent(object):
         
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
+        self.add_fact(fact)
         if random.random() > self.competence:
             ## process fact incorrectly
             is_good = not is_good
@@ -112,13 +171,11 @@ class Agent(object):
                     self.neighbor_spamminess[sender_neighbor] += 1
                 else:
                     self.all_received_facts.add((fact, sender_neighbor))
-                if len(self.last_received_facts) > 10:
+                if len(self.last_received_facts) > self.trust_update_frequency:
                     self.process_trust()
 
         ## Decide who to send the fact to based on spamminess and selfishness
         if is_good:
-            self.knowledge.add(fact)
-
             ## x% spammer person will send the same fact to x% of contacts.
             already_sent_tmp = list(self.history.get(fact,set()))
             template = range(len(already_sent_tmp))

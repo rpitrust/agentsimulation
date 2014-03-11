@@ -2,68 +2,10 @@
 import random 
 import Agent 
 import GraphGen as gg
+import SimulationStats
 import networkx as nx
 from simutil import * 
 
-EPSILON = 0.05
-
-
-def num_good_facts(agent, NUM_FACTS):
-    x = list( agent.knowledge )
-    x.sort()
-    last_fact = -1
-    for i in x:
-        if i >= NUM_FACTS:
-            last_fact = i
-            break
-    if last_fact == -1:
-        return len(x)
-    else:
-        return x.index(last_fact)-1
-
-
-def find_sa(agents, NUM_FACTS):
-    sa = []
-    for agent in agents:
-        sa.append ( num_good_facts(agent, NUM_FACTS) )
-    return (max(sa), meanstd(sa))
-
-## need to add max sa, comm/time to max sa
-
-def process_sa(sa, all_comm, NUM_FACTS):
-    NUM_FACTS = float(NUM_FACTS)
-    ## find the highest sa value first
-    highest_index = len(sa)-1  #avg sa
-    highest_value = sa[-1][0]
-
-    max_highest_index = len(sa)-1 # max sa
-    max_highest_value = sa[-1][2]
-
-    for i in xrange(len(sa)-2,1,-1):
-        if sa[i+1][0] - sa[i][0] <= EPSILON:
-            highest_index = i
-            highest_value = sa[i][0]
-        if sa[i+1][2] - sa[i][2] <= EPSILON:
-            max_highest_index = i
-            max_highest_value = sa[i][2]
-    sa_at_value = []    ## store comm and steps values for a specific sa 
-    next_sa_to_search = 10
-    for i in xrange(len(sa)):
-        if sa[i][0] >= next_sa_to_search:
-            sa_at_value.append (
-                {'sa': next_sa_to_search/NUM_FACTS,\
-                 'comm': all_comm[i],\
-                 'steps': i*100})
-            next_sa_to_search += 10
-
-    summary = { 'steps': highest_index*100, \
-                'sa': highest_value/NUM_FACTS, \
-                'comm': all_comm[highest_index], \
-                'steps_maxsa': max_highest_index*100, \
-                'maxsa': max_highest_value/NUM_FACTS, \
-                'comm_maxsa': all_comm[max_highest_index], \
-                'sa_at_value': sa_at_value }
-    return summary
 
 ########## Initialization code
 
@@ -111,27 +53,6 @@ def change_agent_property(agents, setup):
         for i in xrange(cutoff):
             agents[who[i]].selfish = setup['selfish']
 
-
-########## Print statistics
-
-def agent_stats(agents):
-    fact_dist = []
-    neighbor_dist = []
-    for agent in agents:
-        (f,n) = agent.stat()
-        fact_dist.append (f)
-        neighbor_dist.append (n)
-    print "Facts per agent", (1.0*sum(fact_dist))/len(fact_dist)
-    print "Neighbors per agent", (1.0*sum(neighbor_dist))/len(neighbor_dist)
-
-
-def full_comms(agents):
-    val = 0
-    filtered = 0
-    for agent in agents:
-        val += agent.numsent
-        filtered += agent.num_filtered
-    return (val, filtered)
 
 ########## Run simulation
 
@@ -182,38 +103,23 @@ def multi_step_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
             k = random.randint(0,NUM_AGENTS-1)
             agents[k].add_fact(i)
             
-    #agent_stats(agents)
-
     ## Initialize agents to send everything that they think is valuable 
     ## in their outbox
     for agent in agents:
         agent.init_outbox()
 
     action_list = []
-    sa = []
-    comm = []
-    diagnostics_on = False
-    total_num_filtered = 0
+    all_stats = SimulationStats.SimulationStats(NUM_FACTS, \
+                                                NUM_NOISE,\
+                                                num_cc, \
+                                                size_lcc)
     for i in xrange(NUM_STEPS):
         x = one_step_simulation(agents)
         action_list.append(x)
         if i%100 == 0:
-            (maxsa, (m,s)) = find_sa(agents, NUM_FACTS)
-            ##if len(sa) != 0 and ((m-sa[-1][0]) < EPSILON):
-            ##    break
-            sa.append( [m,s, maxsa] )
-            (c,f) = full_comms(agents)
-            comm.append(c)
-            total_num_filtered += f
+            all_stats.update_stats(agents,i)
 
-            if diagnostics_on:
-                f = open("trust_data.txt","a")
-                f.write("***** %.1f/%.1f *******\n" %(WILLINGNESS, COMPETENCE))
-                for a in agents: 
-                    f.write(a.get_trust_for_neighbors()+"\n")
-                f.close()
-
-    return (sa, comm, num_cc, size_lcc, total_num_filtered)
+    return all_stats
 
 
 def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
@@ -223,57 +129,35 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
                    TRUST_FILTER_ON=True):
-    all_num_cc = 0.0
-    all_size_lcc = 0.0
-    total_filtered = 0.0
-    (all_sa, all_comm, \
-     num_cc, size_lcc, f) = multi_step_simulation(NUM_FACTS,\
-                                                  NUM_NOISE, \
-                                                  NUM_AGENTS, \
-                                                  AGENT_PER_FACT,\
-                                                  CONNECTION_PROBABILITY,\
-                                                  NUM_STEPS, WILLINGNESS,\
-                                                  COMPETENCE, GRAPH_TYPE,\
-                                                  AGENT_SETUP, \
-                                                  SPAMMINESS, SELFISHNESS, \
-                                                  TRUST_USED, \
-                                                  INBOX_TRUST_SORTED, \
-                                                  TRUST_FILTER_ON )
-    all_num_cc += num_cc
-    all_size_lcc += size_lcc
-    total_filtered += f
+    all_stats = multi_step_simulation(NUM_FACTS,\
+                                      NUM_NOISE, \
+                                      NUM_AGENTS, \
+                                      AGENT_PER_FACT,\
+                                      CONNECTION_PROBABILITY,\
+                                      NUM_STEPS, WILLINGNESS,\
+                                      COMPETENCE, GRAPH_TYPE,\
+                                      AGENT_SETUP, \
+                                      SPAMMINESS, SELFISHNESS, \
+                                      TRUST_USED, \
+                                      INBOX_TRUST_SORTED, \
+                                      TRUST_FILTER_ON )
 
     for i in xrange(1, NUM_TRIAL):
-        (sa, comm, \
-         num_cc, size_lcc, f) = multi_step_simulation(NUM_FACTS, NUM_NOISE, \
-                                                      NUM_AGENTS, \
-                                                      AGENT_PER_FACT, \
-                                                      CONNECTION_PROBABILITY,\
-                                                      NUM_STEPS, WILLINGNESS,\
-                                                      COMPETENCE, GRAPH_TYPE, \
-                                                      AGENT_SETUP, \
-                                                      SPAMMINESS, SELFISHNESS, \
-                                                      TRUST_USED, \
-                                                      INBOX_TRUST_SORTED, \
-                                                      TRUST_FILTER_ON )
-        all_num_cc += num_cc
-        all_size_lcc += size_lcc
-        total_filtered += f
-        for j in xrange(len(sa)):
-            all_comm[j] += comm[j]
-            all_sa[j][0] += sa[j][0]
-            all_sa[j][1] += sa[j][1]
-            all_sa[j][2] += sa[j][2]
+        new_stats = multi_step_simulation(NUM_FACTS, NUM_NOISE, \
+                                          NUM_AGENTS, \
+                                          AGENT_PER_FACT, \
+                                          CONNECTION_PROBABILITY,\
+                                          NUM_STEPS, WILLINGNESS,\
+                                          COMPETENCE, GRAPH_TYPE, \
+                                          AGENT_SETUP, \
+                                          SPAMMINESS, SELFISHNESS, \
+                                          TRUST_USED, \
+                                          INBOX_TRUST_SORTED, \
+                                          TRUST_FILTER_ON )
 
+        all_stats.merge_stats(new_stats)
 
-    for j in xrange(len(all_sa)):
-        all_sa[j][0] = all_sa[j][0]*1.0/NUM_TRIAL
-        all_sa[j][1] = all_sa[j][1]*1.0/NUM_TRIAL
-        all_sa[j][2] = all_sa[j][2]*1.0/NUM_TRIAL
-        all_comm[j] = all_comm[j]*1.0/NUM_TRIAL
-
-    total_filtered /= NUM_TRIAL
-    summary_results = process_sa(all_sa, all_comm, NUM_FACTS)
+    summary_results = all_stats.process_sa()
 
     results = {}
     results['setup'] = {'num_facts':NUM_FACTS, \
@@ -292,12 +176,15 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
                         'num_trial': NUM_TRIAL,\
                         'graph_type': GRAPH_TYPE,\
                         'agent_setup': AGENT_SETUP}
-    results['total_filtered'] = total_filtered
-    results['num_cc'] = all_num_cc/NUM_TRIAL
-    results['size_lcc'] = all_size_lcc/NUM_TRIAL
+    results['total_filtered'] = summary_results['total_filtered']
+    results['num_cc'] = summary_results['num_cc']
+    results['size_lcc'] = summary_results['size_lcc']
     results['summary_results'] = summary_results
-    results['all_sa'] = all_sa
-    results['all_comm'] = all_comm
+    results['all_sa'] = all_stats.sa
+    results['all_comm'] = all_stats.comm
+    results['all_sa0'] = all_stats.sa0
+    results['all_comm0'] = all_stats.comm0
+    results['steps'] = all_stats.steps
 
     return (results)
     
