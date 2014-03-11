@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Classes in this package &mdash; Trust and Information Sharing Agent Simulation 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" />
+    <link rel="prev" title="Running the agent simulation model" href="running.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running the agent simulation model"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="classes-in-this-package">
+<h1>Classes in this package<a class="headerlink" href="#classes-in-this-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-Agent">
+<span id="class-agent-implements-functionality-of-a-single-agent"></span><h2><strong>Class:</strong> <a class="reference internal" href="#module-Agent" title="Agent"><tt class="xref py py-class docutils literal"><span class="pre">Agent</span></tt></a> &#8212; Implements functionality of a single agent<a class="headerlink" href="#module-Agent" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Agent.Agent">
+<em class="property">class </em><tt class="descclassname">Agent.</tt><tt class="descname">Agent</tt><big>(</big><em>w</em>, <em>c</em>, <em>numfacts</em>, <em>numnoise</em>, <em>spam</em>, <em>selfish</em>, <em>trust_used</em>, <em>inbox_trust_sorted</em>, <em>trust_filter_on</em>, <em>capacity</em><big>)</big><a class="reference internal" href="_modules/Agent.html#Agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Agent.Agent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Class for generating and implementing Agents.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">member int numfacts:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">number of facts in the simulation 
+that are valuable</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param int numnoise:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">number of facts in the simulation 
+that are noise</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param float w:</th><td class="field-body">how frequently an agent will act</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param float c:</th><td class="field-body">how frequently the agent will a fact 
+as valuable or not correctly (1: always, p: 
+p% of the time)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param float spam:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">how frequently the agent will send the 
+same fact to the same person (1 always, 0 never)</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param float selfish:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">how frequently the agent will drop 
+a fact and not send at all to a specific person 
+(0 never, 1 always)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param int capacity:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">how many actions an agent can take 
+at each simulation step, 1 by default to implement 
+agents with limited cognitive resources.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="key-functions">
+<h3>Key functions:<a class="headerlink" href="#key-functions" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="Agent.Agent.connect_to">
+<tt class="descclassname">Agent.</tt><tt class="descname">connect_to</tt><big>(</big><em>neighbors</em>, <em>prior_comp=('M'</em>, <em>'M')</em>, <em>prior_will=('M'</em>, <em>'M')</em><big>)</big><a class="reference internal" href="_modules/Agent.html#Agent.connect_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Agent.Agent.connect_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects the agent to a set of other agents.</p>
+<p>Example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">a</span><span class="o">.</span><span class="n">connect_to</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="s">&#39;L&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">,</span><span class="s">&#39;H&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Create a link to all Agents in the set neighbors.
+Initialize prior trust for all neighbors if prior
+competence and willigness is given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>neighbors</strong> &#8211; a set of Agent objects
+that are neighbors of the current Agent</li>
+<li><strong>prior_comp</strong> &#8211; prior competence
+belief for all neighbors, given as a pair of belief and
+uncertainty values, each one of &#8216;L&#8217;,&#8217;M&#8217;,&#8217;H&#8217; for low
+medium and high. See <tt class="xref py py-mod docutils literal"><span class="pre">Trust</span></tt> for more details.</li>
+<li><strong>prior_will</strong> &#8211; prior competence
+belief for all neighbors, same format as prior_comp.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Classes in this package</a><ul>
+<li><a class="reference internal" href="#module-Agent"><strong>Class:</strong> <tt class="docutils literal"><span class="pre">Agent</span></tt> &#8212; Implements functionality of a single agent</a><ul>
+<li><a class="reference internal" href="#key-functions">Key functions:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="previous chapter">Running the agent simulation model</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/classes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running the agent simulation model"
+             >previous</a> |</li>
+        <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Sibel Adali.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

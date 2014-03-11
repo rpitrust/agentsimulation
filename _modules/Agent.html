@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Agent &mdash; Trust and Information Sharing Agent Simulation 1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for Agent</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    .. py:class:: Agent(willingness, competence, numfacts, numnoise,</span>
+<span class="sd">                  spamminess, selfishness, trust_used, </span>
+<span class="sd">                  inbox_trust_sorted, trust_filter_on, capacity)</span>
+
+<span class="sd">    Class for generating and implementing Agents.</span>
+
+<span class="sd">    :param int numfacts: number of facts in the simulation that are </span>
+<span class="sd">     valuable</span>
+
+<span class="sd">    :param int numnoise: number of facts in the simulation that are</span>
+<span class="sd">     noise</span>
+
+<span class="sd">    :param float willingness: how frequently an agent will act</span>
+
+<span class="sd">    :param float competence: how frequently the agent will a fact </span>
+<span class="sd">     as valuable or not correctly (1: always, p: p% of the time)</span>
+
+<span class="sd">    :pram float spamminess:  how frequently the agent will send the </span>
+<span class="sd">     same fact to the same person (spammer=1 always, spammer=0 never)</span>
+
+<span class="sd">    :param float selfishness: how frequently the agent will drop a fact</span>
+<span class="sd">     and not send at all to a specific person (selfish=0 never, </span>
+<span class="sd">     selfish=1 always)</span>
+
+<span class="sd">    :param int capacity: how many actions an agent can take at each</span>
+<span class="sd">     simulation step. Capacity is 1 by default to implement agents</span>
+<span class="sd">     with limited cognitive resources.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">random</span> 
+<span class="kn">import</span> <span class="nn">Trust</span>
+<span class="kn">from</span> <span class="nn">simutil</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">class</span> <span class="nc">Agent</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Agent"><a class="viewcode-back" href="../classes.html#Agent.Agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">numfacts</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">numnoise</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> \
+                  <span class="n">spammer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">selfish</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  \
+                  <span class="n">trust_used</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">inbox_trust_sorted</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> \
+                  <span class="n">trust_filter_on</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">capacity</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c">## General constants used in simulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NUM_FACTS</span> <span class="o">=</span> <span class="n">numfacts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NUM_NOISE</span> <span class="o">=</span> <span class="n">numnoise</span>
+
+        <span class="c">## Agent properties</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trust_used</span> <span class="o">=</span> <span class="n">trust_used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inbox_trust_sorted</span> <span class="o">=</span> <span class="n">inbox_trust_sorted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">willingness</span> <span class="o">=</span> <span class="n">w</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">competence</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selfish</span> <span class="o">=</span> <span class="n">selfish</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spammer</span> <span class="o">=</span> <span class="n">spammer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trust_filter_on</span> <span class="o">=</span> <span class="n">trust_filter_on</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spam_sensitivity</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c"># discount for spam behavior</span>
+        <span class="c"># how much spamming will be counted as negative competence evidence</span>
+
+        <span class="c">## Action history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c">## list of (fact, sender_neighbor=None)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c">## list of (trust_for_receiver, fact, receiver) </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_received_facts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+        <span class="c">## all facts sent once to someone, used for performance optimization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sentfacts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">numsent</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">## number of facts sent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knowledge</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span> <span class="c">## id of all facts known, spam or valuable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="p">{}</span> <span class="c">## key:fact, value: set of neighbors fact is sent to</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_spent</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">## simulation time, number of times act is executed</span>
+
+        <span class="c">## Network based properties, beliefs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trust</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c">## Key: neighbor, Value: Trust object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_spamminess</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_filtered</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">get_trust_for_neighbors</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s">/</span><span class="si">%r</span><span class="s"> &quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">trust</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">is_trusted</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">line</span>
+
+    <span class="k">def</span> <span class="nf">add_fact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fact</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add fact to knowledge. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knowledge</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fact</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">connect_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> \
+<div class="viewcode-block" id="Agent.connect_to"><a class="viewcode-back" href="../classes.html#Agent.Agent.connect_to">[docs]</a>                   <span class="n">prior_comp</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="s">&#39;M&#39;</span><span class="p">),</span> \
+                   <span class="n">prior_will</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="s">&#39;M&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            ..py:function:: Agent.connect_to(neighbors, prior_comp, prior_will)</span>
+
+<span class="sd">            Example usage::</span>
+
+<span class="sd">                a.connect_to(lista, (&#39;M&#39;,&#39;L&#39;), (&#39;H&#39;,&#39;H&#39;))</span>
+
+<span class="sd">            Create a link to all Agents in the set neighbors.</span>
+<span class="sd">            Initialize prior trust for all neighbors if prior</span>
+<span class="sd">            competence and willigness is given.</span>
+
+<span class="sd">            :param set(Agent) neighbors: a set of Agent objects</span>
+<span class="sd">             that are neighbors of the current Agent</span>
+
+<span class="sd">            :param tuple(string, string) prior_comp: prior competence</span>
+<span class="sd">             belief for all neighbors, given as a pair of belief and</span>
+<span class="sd">             uncertainty. See :mod:`Trust` for more details.</span>
+
+<span class="sd">            :param tuple(string, string) prior_will: prior competence</span>
+<span class="sd">             belief for all neighbors, given as a pair of belief and</span>
+<span class="sd">             uncertainty. See :mod:`Trust` for more details.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">Trust</span><span class="o">.</span><span class="n">Trust</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prior_comp</span><span class="p">,</span> <span class="n">prior_will</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_spamminess</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">stat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="sd">&quot;&quot;&quot; Return basic stats for the agent. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">knowledge</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">is_fact_valuable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fact</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the ground truth of whether the fact is valuable. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">fact</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">NUM_FACTS</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NUM_FACTS</span> <span class="o">&lt;=</span> <span class="n">fact</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NUM_FACTS</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">NUM_NOISE</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>  <span class="c">## Invalid fact.</span>
+
+    <span class="k">def</span> <span class="nf">process_fact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">sender_neighbor</span><span class="p">):</span>
+        <span class="c">## sender_neighbor is None if the fact is from initial inbox </span>
+        
+        <span class="c"># Determine if the fact is valuable</span>
+        <span class="n">is_good</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_fact_valuable</span><span class="p">(</span><span class="n">fact</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">competence</span><span class="p">:</span>
+            <span class="c">## process fact incorrectly</span>
+            <span class="n">is_good</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_good</span>
+
+        <span class="c"># If trust is considered, add this fact as evidence and spamminess</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_used</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sender_neighbor</span><span class="p">:</span> <span class="c">## there is a sender for the fact</span>
+                <span class="c">## there is no sender for initial facts</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">sender_neighbor</span><span class="p">,</span> <span class="n">is_good</span><span class="p">)</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">sender_neighbor</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_received_facts</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_spamminess</span><span class="p">[</span><span class="n">sender_neighbor</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">all_received_facts</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">fact</span><span class="p">,</span> <span class="n">sender_neighbor</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process_trust</span><span class="p">()</span>
+
+        <span class="c">## Decide who to send the fact to based on spamminess and selfishness</span>
+        <span class="k">if</span> <span class="n">is_good</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knowledge</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fact</span><span class="p">)</span>
+
+            <span class="c">## x% spammer person will send the same fact to x% of contacts.</span>
+            <span class="n">already_sent_tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fact</span><span class="p">,</span><span class="nb">set</span><span class="p">()))</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">already_sent_tmp</span><span class="p">))</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spammer</span><span class="p">))</span>
+            <span class="n">already_sent</span>  <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[:</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">already_sent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">already_sent_tmp</span><span class="p">[</span> <span class="n">template</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="p">)</span>
+
+            <span class="n">to_send</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">to_send_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">already_sent</span><span class="p">)</span>
+            <span class="n">to_send_tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">to_send_tmp</span><span class="p">)</span>
+
+            <span class="n">template</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_used</span><span class="p">:</span> <span class="c">##construct template based on trust</span>
+                <span class="c">## and exclude people if trust filter is on</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">to_send_tmp</span><span class="p">)):</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="n">to_send_tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_filter_on</span><span class="p">:</span> <span class="c">##only included trusted people</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">is_trusted</span><span class="p">:</span>
+                            <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">trust</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">num_filtered</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">trust</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="p">)</span>
+                <span class="c">## choose the least trusted people from to_send_tmp to exclude</span>
+                <span class="n">template</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c">## no trust used</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">to_send_tmp</span><span class="p">)):</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="n">to_send_tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="p">)</span>
+                <span class="c">## choose random people from to_send_tmp to exclude</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">selfish</span><span class="p">))</span>
+
+            <span class="c">## find the items to send, sort by trust if trust is used</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[:</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">to_send</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">to_send_tmp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_used</span><span class="p">:</span> 
+                <span class="n">to_send</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span> <span class="n">to_send</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">init_outbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add all initial knowledge as a fact to send out. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">fact</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_fact</span><span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="c">## There is no sender</span>
+
+    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Receive a fact from another neighbor. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">             A single action for the agent:</span>
+<span class="sd">             - either send something from the outbox, or</span>
+<span class="sd">             - receive something from the inbox if outbox is empty.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">debug</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_spent</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c">## simulation time incremented</span>
+        <span class="n">actions_taken</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">):</span>
+            <span class="c">### By willingness probability, decide whether to act or not</span>
+            <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">willingness</span><span class="p">:</span>
+                <span class="c">## Agent decided to act</span>
+                <span class="n">decision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decide_action</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">decision</span> <span class="o">==</span> <span class="s">&#39;outbox&#39;</span><span class="p">:</span>
+                    <span class="c">### Take the first action from the outbox</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">numsent</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="p">(</span><span class="n">trust</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">fact</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentfacts</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="n">fact</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="n">fact</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sentfacts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fact</span><span class="p">)</span>
+                    <span class="n">actions_taken</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">fact</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># decision is inbox</span>
+                    <span class="c">### Process the first fact in the inbox and queue to outbox </span>
+                    <span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process_fact</span><span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">actions_taken</span>  <span class="c">## No send action was taken</span>
+
+    <span class="k">def</span> <span class="nf">decide_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="c">## choose outbox as long as there is something there.</span>
+        <span class="c"># if len(self.outbox) != 0 and len(self.inbox) != 0:</span>
+        <span class="c">#     if random.random() &lt; 0.5:</span>
+        <span class="c">#         return &quot;outbox&quot;</span>
+        <span class="c">#     else:</span>
+        <span class="c">#         return &quot;inbox&quot;</span>
+        <span class="c"># elif len(self.outbox) != 0:</span>
+        <span class="c">#     return &quot;outbox&quot;</span>
+        <span class="c"># else:</span>
+        <span class="c">#     return &quot;inbox&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;outbox&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;inbox&quot;</span>
+        
+
+    <span class="k">def</span> <span class="nf">sort_inbox_by_trust</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">             Sort the inbox according to the current trust value of </span>
+<span class="sd">             each neighbor, send to most trusted first. Called from </span>
+<span class="sd">             process_trust, after updating trust if a flag is set.</span>
+<span class="sd">             We will simply take the trusted agents&#39; message and put</span>
+<span class="sd">             them to top!</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_inbox</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">unsorted_inbox</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">sender</span><span class="p">]</span><span class="o">.</span><span class="n">is_trusted</span><span class="p">:</span>
+                <span class="n">new_inbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">sender</span><span class="p">]</span><span class="o">.</span><span class="n">trust</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">unsorted_inbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">new_inbox</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span> <span class="ow">in</span> <span class="n">new_inbox</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">fact</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inbox</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">unsorted_inbox</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sort_outbox_by_trust</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">             Sort the outbox according to the current trust value of </span>
+<span class="sd">             each neighbor, send to most trusted first. Called from </span>
+<span class="sd">             process_trust, after updating trust.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_outbox</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">trust</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span><span class="p">:</span>
+            <span class="n">new_outbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span><span class="o">.</span><span class="n">trust</span><span class="p">,</span> <span class="n">fact</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">new_outbox</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outbox</span> <span class="o">=</span> <span class="n">new_outbox</span>
+
+    <span class="k">def</span> <span class="nf">process_trust</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">             After a certain amount of evidence is collected, </span>
+<span class="sd">             update trust for each neighbor and resort the outbox.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">num_evidence</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span><span class="p">))</span>
+        <span class="n">evidence</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">is_good</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span><span class="p">:</span>
+            <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">is_good</span><span class="p">:</span>
+                <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">all_will_evidence</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">all_will_evidence</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span> <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">num_evidence</span> <span class="p">)</span>
+            <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spam_sensitivity</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_spamminess</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">meanstd</span><span class="p">(</span><span class="n">all_will_evidence</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">num_evidence</span> 
+            <span class="n">ev</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">m</span><span class="o">+</span><span class="n">s</span><span class="p">:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="mf">0.75</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="o">-</span><span class="n">s</span><span class="p">:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">s</span><span class="p">:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="mf">0.25</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get_will_evidence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_spent</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get_comp_evidence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_spent</span><span class="p">,</span> \
+                                            <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> \
+                                            <span class="n">evidence</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trust</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get_trust</span><span class="p">()</span>  <span class="c">## Update trust category for neighbor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_received_facts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sort_outbox_by_trust</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inbox_trust_sorted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sort_inbox_by_trust</span><span class="p">()</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Sibel Adali.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

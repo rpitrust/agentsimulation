@@ -17,6 +17,7 @@ Documentation:
 
    overview
    running
+   classes
 
 Indices and tables
 ==================
