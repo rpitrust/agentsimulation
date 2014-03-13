@@ -21,6 +21,9 @@ class SimulationStats(object):
             self.num_appended = 1.0 ## how many stats objects are combined
             self.EPSILON = 0.05
 
+        def __str__ (self):
+            return (str(self.sa0) + "\n" + str(self.comm))
+
         def merge_stats( self, other ):
             for i in xrange(len(self.steps)):
                 self.sa[i][0] += other.sa[i][0]
@@ -52,7 +55,7 @@ class SimulationStats(object):
             x.sort()
             last_fact = -1
             for i in x:
-                if i >= self.NUM_FACTS:
+                if i > self.NUM_FACTS:
                     last_fact = i
                     break
             if last_fact == -1:

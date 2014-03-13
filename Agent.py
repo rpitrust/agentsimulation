@@ -1,48 +1,48 @@
 
 """
-    .. py:class:: Agent(w, c, numfacts, numnoise, spam, selfish, trust_used, inbox_trust_sorted, trust_filter_on, capacity, uses_knowledge)
+.. py:class:: Agent
 
-    Class for generating and implementing Agents.
+   .. automethod:: __init__
 
-    :param int numfacts: number of facts in the simulation 
-     that are valuable
+Class for generating and implementing Agents.
 
-    :param int numnoise: number of facts in the simulation 
-     that are noise
+:param int numfacts: number of facts in the simulation 
+ that are valuable
 
-    :param float w: how frequently an agent will act
+:param int numnoise: number of facts in the simulation 
+ that are noise
 
-    :param float c: how frequently the agent will a fact 
-     as valuable or not correctly (1: always, p: 
-     p% of the time)
+:param float will: how frequently an agent will act
+:param float comp: how frequently the agent will a fact 
+ as valuable or not correctly (1: always, p: 
+ p% of the time)
 
-    :param float spam:  how frequently the agent will send the 
-     same fact to the same person (1 always, 0 never)
+:param float spam:  how frequently the agent will send the 
+ same fact to the same person (1 always, 0 never)
 
-    :param float selfish: how frequently the agent will drop 
-     a fact and not send at all to a specific person 
-     (0 never, 1 always)
+:param float selfish: how frequently the agent will drop 
+ a fact and not send at all to a specific person 
+ (0 never, 1 always)
 
-    :param int capacity: how many actions an agent can take 
-     at each simulation step, 1 by default to implement 
-     agents with limited cognitive resources.
+:param int capacity: how many actions an agent can take 
+ at each simulation step, 1 by default to implement 
+ agents with limited cognitive resources.
 
-    :param Boolean trust_used: If True (default), keeps statistics 
-     about Trust and sorts outbox by how much each neighbor is trusted 
+:param Boolean trust_used: If True (default), keeps statistics 
+ about Trust and sorts outbox by how much each neighbor is trusted 
  
-    :param Boolean inbox_trust_sorted: If True (default), periodically
-     sorts the inbox by trust, processing facts from trusted neighbors
-     first
+:param Boolean inbox_trust_sorted: If True (default), periodically
+ sorts the inbox by trust, processing facts from trusted neighbors
+ first
 
-    :param Boolean trust_filter_on: If True (default), it only sends
-     messages out to neighbors that are minimally trusted, the rest
-     are filtered out.
+:param Boolean trust_filter_on: If True (default), it only sends
+ messages out to neighbors that are minimally trusted, the rest
+ are filtered out.
 
-    :param Boolean uses_knowledge: True (default) if agent uses
-     knowledge based processing and sends only facts it considers
-     valuable. If False: it sends all facts regardless of value, used
-     for hierarchical processing.
-
+:param Boolean uses_knowledge: True (default) if agent uses
+ knowledge based processing and sends only facts it considers
+ valuable. If False: it sends all facts regardless of value, used
+ for hierarchical processing.
 
 """
 
@@ -211,11 +211,20 @@ class Agent(object):
                 ## choose random people from to_send_tmp to exclude
                 random.shuffle(template)
 
+            """ ***********Old selfishness code
             idx = int(len(template) * (1-self.selfish))
 
             ## find the items to send, sort by trust if trust is used
             for (t,i) in template[:idx]:
                 to_send.append( (t, fact, to_send_tmp[i]) )
+            **** end of old selfishness code 
+            """
+            ## New selfishness code
+            for (t, i) in template:
+                if random.random() <= (1-self.selfish):
+                    to_send.append( (t, fact, to_send_tmp[i]) )
+            ## New selfishness code
+
 
             if self.trust_used: 
                 to_send.sort(reverse = True)

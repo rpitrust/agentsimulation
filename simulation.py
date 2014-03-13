@@ -14,16 +14,33 @@ def create_connectivity(agents, p, type='undirected_random'):
         conn = gg.random_undirected_graph(agents, p)
     elif type == 'spatial_random':
         conn = gg.spatial_random_graph(agents, p)
+    elif type == 'hierarchy':
+        conn = gg.hierarchy_graph(agents)
+        for agent in agents[1:]:
+            agent.uses_knowledge = False
+        if p==1: ##team leaders can do filtering
+            for agent in agents[1:5]:
+                agent.uses_knowledge = True
+    elif type == 'collaborative':
+        conn = gg.collaborative_graph(agents)
+        for agent in agents[1:]:
+            agent.uses_knowledge = False
+        if p==1: ##team leaders can do filtering
+            for agent in agents[1:5]:
+                agent.uses_knowledge = True
     else:
         conn = gg.random_directed_graph(agents, p)
         
     for agent1 in conn.nodes():
         agent1.connect_to(conn.neighbors(agent1))
     
-    cc_conn = nx.connected_components(conn)
-    ## return the number of connected components and 
-    ## the size of the largest connected component
-    return (len(cc_conn), len(cc_conn[0]))
+    if type in ['hierarchy', 'collaborative']:
+        return (1, len(agents))
+    else:
+        cc_conn = nx.connected_components(conn)
+        ## return the number of connected components and 
+        ## the size of the largest connected component
+        return (len(cc_conn), len(cc_conn[0]))
 
 def change_agent_property(agents, setup):
     """
@@ -154,10 +171,11 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
                                           TRUST_USED, \
                                           INBOX_TRUST_SORTED, \
                                           TRUST_FILTER_ON )
-
         all_stats.merge_stats(new_stats)
 
     summary_results = all_stats.process_sa()
+    ## debug code 
+    ##print str(all_stats)
 
     results = {}
     results['setup'] = {'num_facts':NUM_FACTS, \

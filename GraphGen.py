@@ -44,7 +44,7 @@ def spatial_random_graph(objects, radius=1):
     return conn
 
 def collaborative_graph(objects):
-    conn = nx.Graph()
+    conn = nx.DiGraph()
     counter = 0
     ##Link bottom layer to middle layer
     for object in objects[5:]:
@@ -53,29 +53,31 @@ def collaborative_graph(objects):
         counter = (counter + 1) % 4
 
     ##Add collaboration between bottom row.
-    for object1 in objects[1:5]:
-        object2 = random.choice(objects[1:5])
+    for i in range(len(objects)/4):
+        object1 = random.choice(objects[5:])
+        object2 = random.choice(objects[5:])
         while object2 == object1:
-            object2 = random.choice(objects[1:5])
-        conn.add_edge(random.choice(conn.neighbors(object1)),
-                 random.choice(conn.neighbors(object2)))
+            object2 = random.choice(objects[5:])
+        conn.add_edge(object1,object2)
+        conn.add_edge(object2,object1)
                  
     ##Add collaboration between middle row.
     for object1 in objects[1:5]:
         for object2 in objects[1:5]:
             if object1 != object2:
                 conn.add_edge(object1,object2)
+                conn.add_edge(object2,object1)
                  
     ##Link middle layer to root
     for object in objects[1:5]:
         conn.node[object]['rank'] = 1
-        conn.add_edge(objects[0],object)
+        conn.add_edge(object,objects[0])
     conn.node[objects[0]]['rank'] = 0
             
     return conn
 
 def hierarchy_graph(objects):
-    conn = nx.Graph()
+    conn = nx.DiGraph()
     counter = 0
     ##Link bottom layer to middle layer
     for object in objects[5:]:
@@ -85,7 +87,7 @@ def hierarchy_graph(objects):
 
     ##Link middle layer to root
     for object in objects[1:5]:
-        conn.add_edge(objects[0],object)
+        conn.add_edge(object, objects[0])
         conn.node[object]['rank'] = 1
     conn.node[objects[0]]['rank'] = 0
 
