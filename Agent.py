@@ -176,21 +176,26 @@ class Agent(object):
 
         ## Decide who to send the fact to based on spamminess and selfishness
         if is_good:
-            ## x% spammer person will send the same fact to x% of contacts.
-            already_sent_tmp = list(self.history.get(fact,set()))
-            template = range(len(already_sent_tmp))
-            random.shuffle(template)
-            idx = int(len(template) * (1-self.spammer))
-            already_sent  = []
-            for i in template[:idx]:
-                already_sent.append( already_sent_tmp[ template[i]] )
+            if self.spammer > 0:
+                ## x% spammer person will send the same fact to x% of contacts.
+                already_sent_tmp = list(self.history.get(fact,set()))
+                template = range(len(already_sent_tmp))
+                random.shuffle(template)
+                idx = int(len(template) * (1-self.spammer))
+                already_sent  = []
+                for i in template[:idx]:
+                    already_sent.append( already_sent_tmp[ template[i]] )
+                already_sent = set(already_sent)
+            else:
+                already_sent = self.history.get(fact,set())
 
             to_send = []
-            to_send_tmp = self.neighbors - set(already_sent)
+            to_send_tmp = self.neighbors - already_sent
             to_send_tmp = list(to_send_tmp)
 
             template = []
 
+            ##selfishness code
             if self.trust_used: ##construct template based on trust
                 ## and exclude people if trust filter is on
                 for i in range(len(to_send_tmp)):
@@ -204,30 +209,22 @@ class Agent(object):
                         template.append( (self.trust[n].trust, i) )
                 ## choose the least trusted people from to_send_tmp to exclude
                 template.sort()
-            else:  ## no trust used
-                for i in range(len(to_send_tmp)):
-                    n = to_send_tmp[i]
-                    template.append( (1, i) )
-                ## choose random people from to_send_tmp to exclude
-                random.shuffle(template)
-
-            """ ***********Old selfishness code
-            idx = int(len(template) * (1-self.selfish))
-
-            ## find the items to send, sort by trust if trust is used
-            for (t,i) in template[:idx]:
-                to_send.append( (t, fact, to_send_tmp[i]) )
-            **** end of old selfishness code 
-            """
-            ## New selfishness code
-            for (t, i) in template:
-                if random.random() <= (1-self.selfish):
+                idx = int(len(template) * (1-self.selfish))
+                
+                ## find the items to send, sort by trust if trust is used
+                for (t,i) in template[:idx]:
                     to_send.append( (t, fact, to_send_tmp[i]) )
-            ## New selfishness code
-
-
-            if self.trust_used: 
                 to_send.sort(reverse = True)
+            else:  ## no trust used
+                if self.selfish > 0:
+                    for i in range(len(to_send_tmp)):
+                        n = to_send_tmp[i]
+                        if random.random() <= (1-self.selfish):
+                            to_send.append( (1, fact, to_send_tmp[i]) )
+                else:
+                    for i in range(len(to_send_tmp)):
+                        n = to_send_tmp[i]
+                        to_send.append( (1, fact, to_send_tmp[i]) )
 
             self.outbox.extend( to_send )
 

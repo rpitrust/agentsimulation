@@ -10,16 +10,17 @@ import sys
 import simulation as sim
 
 def print_results(results):
-    print "Trust: %r, Filter: %r, Inbox: %r\n SA: %s\t Comm: %s\t Steps %s" \
+    print "Trust: %r, Filter: %r, Inbox: %r" \
         %(results['setup']['trust_used'], \
           results['setup']['trust_filter_on'], \
-          results['setup']['inbox_trust_sorted'], \
-          results['summary_results']['sa'], \
-          results['summary_results']['comm'], \
-          results['summary_results']['steps'])
+          results['setup']['inbox_trust_sorted'])
     for val in results['summary_results']['sa_at_value']:
-        print "Steps: %d\t Comm:%.1f\t @sa %.1f" \
+        print "\tSteps: %d\t Comm:%.1f\t @sa %.1f" \
             %(val['steps'],val['comm'],val['sa'])
+    print "\tSteps: %d\t Comm:%.1f\t @sa %.2f" \
+        %( results['summary_results']['steps'],\
+           results['summary_results']['comm'], \
+           results['summary_results']['sa'] )
 
     print "Total filtered", results['total_filtered']
 
@@ -30,24 +31,25 @@ if __name__ == '__main__':
     num_noise = 5000
     num_agents = 20
     agent_per_fact = 1
-    connection_probability = 1
+    connection_probability = 0.5
+    #connection_probability = 1
     willingness = 1
     competence = 1
-    graph_type = 'collaborative'
-    #graph_type = 'spatial_random'
+    #graph_type = 'collaborative'
+    graph_type = 'spatial_random'
     #graph_type = 'hierarchy'
     spamminess = 0
     selfishness = 0
-    agent_setup = []
+    agent_setup = [{"selfish":0.8, "ratio":0.6}]
 
     trust_used = False
     inbox_trust_sorted = False
     trust_filter_on = False
 
-    #for (trust_used, trust_filter_on, inbox_trust_sorted) in \
-    #    [(False,False,False), (True, True, False), (True, True, True)]:
     for (trust_used, trust_filter_on, inbox_trust_sorted) in \
-        [(False,False,False)]:
+        [(False,False,False), (True, True, False), (True, True, True)]:
+    #for (trust_used, trust_filter_on, inbox_trust_sorted) in \
+    #    [(False,False,False)]:
         
         results = sim.run_simulation(NUM_FACTS=num_facts, \
                                      NUM_NOISE=num_noise, \
