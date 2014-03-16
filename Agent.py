@@ -131,9 +131,10 @@ class Agent(object):
 
         """
         self.neighbors = set(neighbors)
-        for n in self.neighbors:
-            self.trust[n] = Trust.Trust(n, prior_comp, prior_will)
-            self.neighbor_spamminess[n] = 0
+        if self.trust_used or self.trust_filter_on or self.inbox_trust_sorted:
+            for n in self.neighbors:
+                self.trust[n] = Trust.Trust(n, prior_comp, prior_will)
+                self.neighbor_spamminess[n] = 0
 
     def stat(self):
         """ Return basic stats for the agent. """
