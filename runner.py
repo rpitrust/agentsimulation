@@ -17,7 +17,7 @@ def output(output_loc, is_slave, text):
         sock.close()
         
     else:
-        f = open(output_loc,"w")
+        f = open(output_loc,"a")
         f.write (text)
         f.close
 
