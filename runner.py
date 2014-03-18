@@ -6,6 +6,7 @@
 
 import simulation as sim
 import simplejson as sj
+import socket
 import random
 import sys
 
