@@ -174,8 +174,6 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
         all_stats.merge_stats(new_stats)
 
     summary_results = all_stats.process_sa()
-    ## debug code 
-    ##print str(all_stats)
 
     results = {}
     results['setup'] = {'num_facts':NUM_FACTS, \

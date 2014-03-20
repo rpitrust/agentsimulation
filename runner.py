@@ -6,6 +6,7 @@
 
 import simulation as sim
 import simplejson as sj
+import socket
 import random
 import sys
 
@@ -67,7 +68,6 @@ def run(config_file, output_loc, is_slave):
                                                 %(w,c,num_trials)
                                             print "\tagent setup", agent_setup
                                             i += 1
-        
                                             results = sim.run_simulation(num_fact, \
                                                                          num_noise,\
                                                                          num_agents, \
@@ -82,8 +82,7 @@ def run(config_file, output_loc, is_slave):
                                                                          trust_used,\
                                                                          inbox_trust_sorted, \
                                                                          trust_filter_on)
-                                    
-                                    output(output_loc, is_slave, sj.dumps(results) + '\n' )
+                                            output(output_loc, is_slave, sj.dumps(results) + '\n' )
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

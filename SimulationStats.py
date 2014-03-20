@@ -19,7 +19,7 @@ class SimulationStats(object):
             self.num_cc = num_cc
             self.size_lcc = size_lcc
             self.num_appended = 1.0 ## how many stats objects are combined
-            self.EPSILON = 0.05
+            self.EPSILON = 0.01
 
         def __str__ (self):
             return (str(self.sa0) + "\n" + str(self.comm))
@@ -96,11 +96,11 @@ class SimulationStats(object):
             highest_value = self.sa[-1][0]
             max_highest_index = len(self.sa)-1 # max sa
             max_highest_value = self.sa[-1][2]
-            for i in xrange(len(self.sa)-2,1,-1):
-                if self.sa[i+1][0] - self.sa[i][0] <= self.EPSILON:
+            for i in xrange(-2, -len(self.sa)-1,-1):
+                if highest_value - self.sa[i][0] <= self.EPSILON:
                     highest_index = i
                     highest_value = self.sa[i][0]
-                if self.sa[i+1][2] - self.sa[i][2] <= self.EPSILON:
+                if max_highest_value - self.sa[i][2] <= self.EPSILON:
                     max_highest_index = i
                     max_highest_value = self.sa[i][2]
 
@@ -120,13 +120,10 @@ class SimulationStats(object):
             highest_value0 = self.sa0[-1]
             max_highest_index0 = len(self.sa0)-1 # max sa
             max_highest_value0 = self.sa0[-1]
-            for i in xrange(len(self.sa0)-2,1,-1):
-                if self.sa0[i+1] - self.sa0[i] <= self.EPSILON:
+            for i in xrange(-2, -len(self.sa0)-1,-1):
+                if highest_value0 - self.sa0[i] <= self.EPSILON:
                     highest_index0 = i
                     highest_value0 = self.sa0[i]
-                if self.sa0[i+1] - self.sa0[i] <= self.EPSILON:
-                    max_highest_index0 = i
-                    max_highest_value0 = self.sa0[i]
 
             sa0_at_value = []    ## comm & steps values for a specific sa
             next_sa_to_search = 10
@@ -147,9 +144,6 @@ class SimulationStats(object):
                         'steps0': self.steps[highest_index0], \
                         'sa0': highest_value0/self.NUM_FACTS, \
                         'comm0': self.comm0[highest_index0], \
-                        'steps_maxsa0': self.steps[max_highest_index0], \
-                        'maxsa0': max_highest_value0/self.NUM_FACTS, \
-                        'comm_maxsa0': self.comm0[max_highest_index0], \
                         'sa_at_value': sa_at_value ,\
                         'sa0_at_value': sa0_at_value ,\
                         'total_filtered': self.total_filtered, \

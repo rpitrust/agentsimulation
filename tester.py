@@ -14,6 +14,7 @@ def print_results(results):
         %(results['setup']['trust_used'], \
           results['setup']['trust_filter_on'], \
           results['setup']['inbox_trust_sorted'])
+    print "AVG results"
     for val in results['summary_results']['sa_at_value']:
         print "\tSteps: %d\t Comm:%.1f\t @sa %.1f" \
             %(val['steps'],val['comm'],val['sa'])
@@ -21,6 +22,15 @@ def print_results(results):
         %( results['summary_results']['steps'],\
            results['summary_results']['comm'], \
            results['summary_results']['sa'] )
+
+    print "Agent 0 results"
+    for val in results['summary_results']['sa0_at_value']:
+        print "\tSteps: %d\t Comm:%.1f\t @sa %.1f" \
+            %(val['steps'],val['comm'],val['sa'])
+    print "\tSteps: %d\t Comm:%.1f\t @sa %.2f" \
+        %( results['summary_results']['steps0'],\
+           results['summary_results']['comm0'], \
+           results['summary_results']['sa0'] )
 
     print "Total filtered", results['total_filtered']
 
@@ -31,26 +41,27 @@ if __name__ == '__main__':
     num_noise = 5000
     num_agents = 20
     agent_per_fact = 1
-    connection_probability = 0.5
-    #connection_probability = 1
+    connection_probability = 1
+    #connection_probability = 0.5
     willingness = 1
     competence = 1
     #graph_type = 'collaborative'
-    graph_type = 'spatial_random'
-    #graph_type = 'hierarchy'
-    spamminess = 0
+    #graph_type = 'spatial_random'
+    graph_type = 'hierarchy'
+    spamminess = 0.2
     selfishness = 0
-    agent_setup = [{"selfish":0.8, "ratio":0.6}]
+    #agent_setup = [{"selfish":0.8, "ratio":0.6}]
+    agent_setup = []
 
     trust_used = False
     inbox_trust_sorted = False
     trust_filter_on = False
 
-    for (trust_used, trust_filter_on, inbox_trust_sorted) in \
-        [(False,False,False), (True, True, False), (True, True, True)]:
+    # for (trust_used, trust_filter_on, inbox_trust_sorted) in \
+    #     [(False,False,False), (True, True, False), (True, True, True)]:
     #for (trust_used, trust_filter_on, inbox_trust_sorted) in \
     #    [(False,False,False)]:
-        
+    for spamminess in [0,0.2]:
         results = sim.run_simulation(NUM_FACTS=num_facts, \
                                      NUM_NOISE=num_noise, \
                                      NUM_AGENTS=num_agents, \
