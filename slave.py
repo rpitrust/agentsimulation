@@ -20,8 +20,8 @@ if __name__ == '__main__':
         print "Requesting new config file\n"
         sock = socket.socket()
         sock.connect((HOST,PORT))
-        sock.sendall("request")
-        config_file = sock.recv(1024)
+        sock.sendall("request.")
+        config_file = sock.recv(4)
 
         #No files remaining, time to finish
         if config_file == "done":
@@ -30,15 +30,16 @@ if __name__ == '__main__':
 
         #A new file has been sent. Copy it locally, then run it.
         else:
+            config_file = sock.recv(int(config_file)) #Get the name of the file
             print "Running config file: " + config_file
             f = open(config_file,"w")
-            data = sock.recv(1024)
-            while data: #Copy the file
-                f.write(data)
-                data = sock.recv(1024)
+            data = sock.recv(8) #Get the data
+            data = sock.recv(int(data))
+            f.write(data)
             f.close()
+            sock.close()
             runner.run(config_file, HOST, True) #Run it
             os.remove(config_file) #Clean up
-            sock = socket.socket() #Need to reconnect, since socket was closed by server
+            sock = socket.socket()
             sock.connect((HOST,PORT))
-            sock.sendall("complete") #We finished the file, tell the server
+            sock.send("complete") #We finished the file, tell the server

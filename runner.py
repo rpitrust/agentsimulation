@@ -14,7 +14,9 @@ def output(output_loc, is_slave, text):
     if is_slave:
         sock = socket.socket()
         sock.connect((output_loc,2436))
-        sock.sendall (text)
+        sock.sendall("output..")
+        sock.sendall('{0:0>8}'.format(str(len(text))))
+        sock.sendall(text)
         sock.close()
         
     else:
