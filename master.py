@@ -11,8 +11,8 @@ incomplete_sfx = "_incomplete.txt"
 #Right now, it's only used to keep track of timeouts
 class SimulationServer(SocketServer.TCPServer):
 
-       #Timeout is 30 seconds
-       timeout = 30
+       #Timeout is 5 minutes
+       timeout = 300
        alive = True
 
        def handle_timeout(self):
