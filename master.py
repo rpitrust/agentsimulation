@@ -1,3 +1,10 @@
+"""
+    The master requires folders for input configuration and output
+    --see template for an example, and an output file for the results.
+    Example:   python master.py config_dir output_dir
+"""
+
+
 import SocketServer
 import sys
 import os
@@ -7,9 +14,11 @@ output_dir = ""
 output_sfx = "_output.txt"
 incomplete_sfx = "_incomplete.txt"
 
-#SimulationServer deals with any actual server issues
-#Right now, it's only used to keep track of timeouts
 class SimulationServer(SocketServer.TCPServer):
+       """
+       SimulationServer deals with any actual server issues.
+       Currently, it's only used to track timeouts.
+       """
 
        #Timeout is 5 minutes
        timeout = 300
@@ -22,13 +31,14 @@ class SimulationServer(SocketServer.TCPServer):
        def isAlive(self):
           return self.alive
 
-#SimulationHandler deals with handling server requests.
-#It passes out new config files to slaves, and outputs their data
 class SimulationHandler(SocketServer.BaseRequestHandler):
+        """
+        SimulationHandler deals with handling server requests.
+        It passes out new config files to slaves, and outputs their data
+        """
 
        server_list = {}
 
-       #Gets the next unstarted config file. Returns an empty string if there are none remaining.
        def get_config(self):
           for config_file in os.listdir(config_dir + "/"): #Take a look at each file in our config directory
               config_file = config_file[:-4] #Strip off extension
@@ -83,8 +93,11 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
               print "Error: Unknown command '" + self.data + "' from " + self.client_address[0] + " thread: " + identity
 
 
-#This deals with creating our output directory if necessary, and clearing it of incomplete files
 def init_output():
+    """
+    init_output deals with creating our output directory if necessary, and clearing it of incomplete files
+    """
+    
     if not os.path.exists(output_dir): #Create directory
        os.mkdir(output_dir)
     for output_file in os.listdir(output_dir + "/"): #Remove incomplete output files
