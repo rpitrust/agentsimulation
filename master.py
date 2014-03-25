@@ -43,9 +43,10 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
           return ""
 
        def handle(self):
+          identity = self.request.recv(16)
           self.data = self.request.recv(8)
           if self.data == "request.": #Handle a request
-              print "Request received from " + self.client_address[0]
+              print "Request received from " + self.client_address[0] + " thread: " + identity
               config = self.get_config()
               if config: #If there are config files remaining
                   print "Sending config file: " + config + ".txt"
@@ -56,30 +57,30 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
                   self.request.sendall('{0:0>8}'.format(str(len(text))))
                   self.request.sendall(text)
                   f.close
-                  self.server_list[self.client_address[0]] = config
+                  self.server_list[identity] = config
 
               else: #No more config files remaining
                   print "Last config file sent."                  
                   self.request.sendall("done")
               
           elif self.data == "complete": #If the job is done, rename the file and remove it from our in progress list
-              config = self.server_list[self.client_address[0]]
-              print "Completing file " + config + " on client " + self.client_address[0]
+              config = self.server_list[identity]
+              print "Completing file " + config + " on client " + self.client_address[0] + " thread: " + identity
               os.rename(output_dir + "/" + config + incomplete_sfx, output_dir + "/" + config + output_sfx)
-              del self.server_list[self.client_address[0]]
+              del self.server_list[identity]
 
           elif self.data == "output..": #If it's output, get the size of the output then the output itself
               self.data = self.request.recv(8)
               self.data = self.request.recv(int(self.data))
-              print "Output packet received from " + self.client_address[0]
-              f = open(output_dir + "/" + self.server_list[self.client_address[0]] + incomplete_sfx,"a")
+              print "Output packet received from " + self.client_address[0] + " thread: " + identity
+              f = open(output_dir + "/" + self.server_list[identity] + incomplete_sfx,"a")
               f.write( self.data )
               f.write("\n")
               f.close()
-              print "Printing output to " + self.server_list[self.client_address[0]] + incomplete_Sfx
+              print "Printing output to " + self.server_list[identity] + incomplete_sfx
               
           else:
-              print "Error: Unknown command '" + self.data + "'"
+              print "Error: Unknown command '" + self.data + "' from " + self.client_address[0] + " thread: " + identity
 
 
 #This deals with creating our output directory if necessary, and clearing it of incomplete files

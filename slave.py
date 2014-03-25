@@ -2,6 +2,8 @@ import socket
 import runner
 import os
 import sys
+import random
+import string
 
 #Set this to the local IP of the master process
 HOST = '192.168.17.108'
@@ -13,6 +15,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         HOST = sys.argv[1]
+    
+    #Get a random 16 character identity    
+    random.seed()
+    identity = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
 
     #Continue our loop until the master is no longer sending files
     while not done:
@@ -20,6 +26,7 @@ if __name__ == '__main__':
         print "Requesting new config file\n"
         sock = socket.socket()
         sock.connect((HOST,PORT))
+        sock.sendall(identity)
         sock.sendall("request.")
         config_file = sock.recv(4)
 
@@ -38,8 +45,9 @@ if __name__ == '__main__':
             f.write(data)
             f.close()
             sock.close()
-            runner.run(config_file, HOST, True) #Run it
+            runner.run(config_file, HOST, True, identity) #Run it
             os.remove(config_file) #Clean up
             sock = socket.socket()
             sock.connect((HOST,PORT))
+            sock.sendall(identity)
             sock.send("complete") #We finished the file, tell the server
