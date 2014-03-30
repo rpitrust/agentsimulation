@@ -8,36 +8,22 @@
 import SocketServer
 import sys
 import os
+from time import time
 
 config_dir = ""
 output_dir = ""
 output_sfx = "_output.txt"
 incomplete_sfx = "_incomplete.txt"
-
-class SimulationServer(SocketServer.TCPServer):
-       """
-       SimulationServer deals with any actual server issues.
-       Currently, it's only used to track timeouts.
-       """
-
-       #Timeout is 5 minutes
-       timeout = 300
-       alive = True
-
-       def handle_timeout(self):
-          print "Timed out"
-          self.alive = False
-
-       def isAlive(self):
-          return self.alive
+timeout = 1800
 
 class SimulationHandler(SocketServer.BaseRequestHandler):
-        """
-        SimulationHandler deals with handling server requests.
-        It passes out new config files to slaves, and outputs their data
-        """
+       """
+       SimulationHandler deals with handling server requests.
+       It passes out new config files to slaves, and outputs their data
+       """
 
        server_list = {}
+       timer_list = {}
 
        def get_config(self):
           for config_file in os.listdir(config_dir + "/"): #Take a look at each file in our config directory
@@ -47,8 +33,18 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
                  if config_file == in_progress:
                     match = True
                     break
-              if not os.path.isfile(os.path.join(output_dir + "/",config_file + output_sfx)) and not match: #If it's not complete and not in progress, we can start it
+              if not os.path.isfile(os.path.join(output_dir,config_file + output_sfx)) and not match: #If it's not complete and not in progress, we can start it
                  return config_file
+                 
+          #If there are no files remaining, see if there are any with expired timeouts
+          if not self.server_list: return ""
+          identity = min(self.timer_list, key=self.timer_list.get)
+          if time() - self.timer_list[identity] > timeout:
+              config_file = self.server_list[identity]
+              os.remove(output_dir + "/" + config_file + incomplete_sfx)
+              del self.server_list[identity]
+              del self.timer_list[identity]
+              return config_file
               
           return ""
 
@@ -68,6 +64,7 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
                   self.request.sendall(text)
                   f.close
                   self.server_list[identity] = config
+                  self.timer_list[identity] = time()
 
               else: #No more config files remaining
                   print "Last config file sent."                  
@@ -78,11 +75,13 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
               print "Completing file " + config + " on client " + self.client_address[0] + " thread: " + identity
               os.rename(output_dir + "/" + config + incomplete_sfx, output_dir + "/" + config + output_sfx)
               del self.server_list[identity]
+              del self.timer_list[identity]
 
           elif self.data == "output..": #If it's output, get the size of the output then the output itself
               self.data = self.request.recv(8)
               self.data = self.request.recv(int(self.data))
               print "Output packet received from " + self.client_address[0] + " thread: " + identity
+              self.timer_list[identity] = time()
               f = open(output_dir + "/" + self.server_list[identity] + incomplete_sfx,"a")
               f.write( self.data )
               f.write("\n")
@@ -113,7 +112,6 @@ if __name__ == "__main__":
     config_dir = sys.argv[1]
     output_dir = sys.argv[2]
     init_output()
-    server = SimulationServer(('',2436), SimulationHandler)
+    server = SocketServer.TCPServer(('',2436), SimulationHandler)
     print "starting server"
-    while server.isAlive():
-       server.handle_request()
+    server.serve_forever()
