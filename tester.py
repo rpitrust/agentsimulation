@@ -41,13 +41,13 @@ if __name__ == '__main__':
     num_noise = 5000
     num_agents = 20
     agent_per_fact = 1
-    connection_probability = 1
-    #connection_probability = 0.5
+    #connection_probability = 1
+    connection_probability = 0.5
     willingness = 1
     competence = 1
     #graph_type = 'collaborative'
-    #graph_type = 'spatial_random'
-    graph_type = 'hierarchy'
+    graph_type = 'spatial_random'
+    #graph_type = 'hierarchy'
     spamminess = 0.2
     selfishness = 0
     #agent_setup = [{"selfish":0.8, "ratio":0.6}]
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     #     [(False,False,False), (True, True, False), (True, True, True)]:
     #for (trust_used, trust_filter_on, inbox_trust_sorted) in \
     #    [(False,False,False)]:
-    for spamminess in [0,0.2]:
+    for spamminess in [0]:
         results = sim.run_simulation(NUM_FACTS=num_facts, \
                                      NUM_NOISE=num_noise, \
                                      NUM_AGENTS=num_agents, \
@@ -78,5 +78,5 @@ if __name__ == '__main__':
                                      TRUST_USED=trust_used, \
                                      INBOX_TRUST_SORTED=inbox_trust_sorted,\
                                      TRUST_FILTER_ON=trust_filter_on)
-        
+        print results
         print_results(results)

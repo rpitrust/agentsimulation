@@ -159,7 +159,7 @@ class Agent(object):
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
         self.add_fact(fact)
-        if random.random() > self.competence:
+        if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
             is_good = not is_good
 

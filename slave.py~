@@ -4,7 +4,7 @@ import os
 import sys
 
 #Set this to the local IP of the master process
-HOST = '128.213.48.45'
+HOST = '192.168.17.108'
 PORT = 2436
 
 if __name__ == '__main__':
