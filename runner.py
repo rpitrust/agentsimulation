@@ -10,11 +10,14 @@ import socket
 import random
 import sys
 
-def output(output_loc, is_slave, text):
+def output(output_loc, is_slave, identity, text):
     if is_slave:
         sock = socket.socket()
         sock.connect((output_loc,2436))
-        sock.sendall (text)
+        sock.sendall(identity)
+        sock.sendall("output..")
+        sock.sendall('{0:0>8}'.format(str(len(text))))
+        sock.sendall(text)
         sock.close()
         
     else:
@@ -22,7 +25,7 @@ def output(output_loc, is_slave, text):
         f.write (text)
         f.close
 
-def run(config_file, output_loc, is_slave):
+def run(config_file, output_loc, is_slave, identity):
     random.seed(10)
 
     ## Read input configuration
@@ -31,7 +34,7 @@ def run(config_file, output_loc, is_slave):
     f.close()
 
     ## Set output configuration
-    output(output_loc, is_slave, sj.dumps(config) + '\n')
+    output(output_loc, is_slave, identity, sj.dumps(config) + '\n')
 
     num_steps = config['num_steps']
     num_trials = config['num_trials']
@@ -82,7 +85,7 @@ def run(config_file, output_loc, is_slave):
                                                                          trust_used,\
                                                                          inbox_trust_sorted, \
                                                                          trust_filter_on)
-                                            output(output_loc, is_slave, sj.dumps(results) + '\n' )
+                                            output(output_loc, is_slave, identity, sj.dumps(results) + '\n' )
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
@@ -91,4 +94,4 @@ if __name__ == '__main__':
 
     config_file = sys.argv[1]
     output_file = sys.argv[2]
-    run(config_file, output_file, False)
+    run(config_file, output_file, False, 0)

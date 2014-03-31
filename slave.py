@@ -2,6 +2,8 @@ import socket
 import runner
 import os
 import sys
+import random
+import string
 
 #Set this to the local IP of the master process
 HOST = '128.213.48.45'
@@ -13,6 +15,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         HOST = sys.argv[1]
+    
+    #Get a random 16 character identity    
+    random.seed()
+    identity = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
 
     #Continue our loop until the master is no longer sending files
     while not done:
@@ -20,8 +26,9 @@ if __name__ == '__main__':
         print "Requesting new config file\n"
         sock = socket.socket()
         sock.connect((HOST,PORT))
-        sock.sendall("request")
-        config_file = sock.recv(1024)
+        sock.sendall(identity)
+        sock.sendall("request.")
+        config_file = sock.recv(4)
 
         #No files remaining, time to finish
         if config_file == "done":
@@ -30,15 +37,17 @@ if __name__ == '__main__':
 
         #A new file has been sent. Copy it locally, then run it.
         else:
+            config_file = sock.recv(int(config_file)) #Get the name of the file
             print "Running config file: " + config_file
             f = open(config_file,"w")
-            data = sock.recv(1024)
-            while data: #Copy the file
-                f.write(data)
-                data = sock.recv(1024)
+            data = sock.recv(8) #Get the data
+            data = sock.recv(int(data))
+            f.write(data)
             f.close()
-            runner.run(config_file, HOST, True) #Run it
+            sock.close()
+            runner.run(config_file, HOST, True, identity) #Run it
             os.remove(config_file) #Clean up
-            sock = socket.socket() #Need to reconnect, since socket was closed by server
+            sock = socket.socket()
             sock.connect((HOST,PORT))
-            sock.sendall("complete") #We finished the file, tell the server
+            sock.sendall(identity)
+            sock.send("complete") #We finished the file, tell the server
