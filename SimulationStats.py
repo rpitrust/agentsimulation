@@ -145,6 +145,7 @@ class SimulationStats(object):
                         'steps0': self.steps[highest_index0], \
                         'sa0': highest_value0/self.NUM_FACTS, \
                         'comm0': self.comm0[highest_index0], \
+                        'commtotal0': self.comm[highest_index0], \
                         'sa_at_value': sa_at_value ,\
                         'sa0_at_value': sa0_at_value ,\
                         'total_filtered': self.total_filtered, \
