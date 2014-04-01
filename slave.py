@@ -4,6 +4,7 @@ import os
 import sys
 import random
 import string
+from time import sleep
 
 #Set this to the local IP of the master process
 HOST = '128.213.48.45'
@@ -31,7 +32,12 @@ if __name__ == '__main__':
         config_file = sock.recv(4)
 
         #No files remaining, time to finish
-        if config_file == "done":
+        if config_file == "wait":
+            print "All remaining config files are in progress. Sleeping."
+            sleep(300)
+            print "Waking up."
+        
+        elif config_file == "done":
             print "All config files complete. Shutting down."
             done = True
 

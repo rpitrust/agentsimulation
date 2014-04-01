@@ -37,7 +37,7 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
                  return config_file
                  
           #If there are no files remaining, see if there are any with expired timeouts
-          if not self.server_list: return ""
+          if not self.server_list: return 0 #No files in progress
           identity = min(self.timer_list, key=self.timer_list.get)
           if time() - self.timer_list[identity] > timeout:
               config_file = self.server_list[identity]
@@ -46,7 +46,7 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
               del self.timer_list[identity]
               return config_file
               
-          return ""
+          return -1 #Files are in progress, but haven't reached timeout
 
        def handle(self):
           identity = self.request.recv(16)
@@ -54,7 +54,15 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
           if self.data == "request.": #Handle a request
               print "Request received from " + self.client_address[0] + " thread: " + identity
               config = self.get_config()
-              if config: #If there are config files remaining
+              if config == -1:
+                  print "All remaining config files are in progress."
+                  self.request.sendall("wait")
+              
+              elif config == 0:
+                  print "Last config file sent."                  
+                  self.request.sendall("done")
+              
+              else: #If there are config files remaining
                   print "Sending config file: " + config + ".txt"
                   self.request.sendall('{0:0>4}'.format(str(len(config + ".txt")))) #Send the size of the filename
                   self.request.sendall(config + ".txt") #Send the filename
@@ -65,10 +73,6 @@ class SimulationHandler(SocketServer.BaseRequestHandler):
                   f.close
                   self.server_list[identity] = config
                   self.timer_list[identity] = time()
-
-              else: #No more config files remaining
-                  print "Last config file sent."                  
-                  self.request.sendall("done")
               
           elif self.data == "complete": #If the job is done, rename the file and remove it from our in progress list
               config = self.server_list[identity]
