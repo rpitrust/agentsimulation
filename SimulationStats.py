@@ -132,6 +132,7 @@ class SimulationStats(object):
                     sa0_at_value.append (
                         {'sa': next_sa_to_search/self.NUM_FACTS,\
                          'comm': self.comm0[i],\
+                         'commtotal': self.comm[i],\
                          'steps': self.steps[i]})
                     next_sa_to_search += 10
         
