@@ -20,7 +20,7 @@ def random_undirected_graph(objects, p):
     conn = nx.Graph()
     for object1 in objects:
         for object2 in objects:
-            if random.random() <= 1-sqrt(1-p):
+            if random.random() <= 1-math.sqrt(1-p):
                 conn.add_edge(object1,object2)
     return conn
 
