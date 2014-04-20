@@ -43,6 +43,11 @@ Class for generating and implementing Agents.
  knowledge based processing and sends only facts it considers
  valuable. If False: it sends all facts regardless of value, used
  for hierarchical processing.
+ 
+:param Boolean uses_confidence: True if agent uses confidence
+ based processing and sends on the facts it has the highest
+ certainty in. If False (default), it does not keep track of
+ any confidence.
 
 """
 
@@ -152,80 +157,106 @@ class Agent(object):
             return False
         else:
             return None  ## Invalid fact.
-
+            
+    def guess_value(self,fact):
+        """ If we're using competence, decide whether the
+        agent guesses the right value for the fact. """
+        is_good = self.is_fact_valuable(fact)
+        if random.random() > self.competence and self.uses_knowledge:
+            ## process fact incorrectly
+            is_good = not is_good
+        return is_good
+    
+    def update_trust(self,fact, is_good):
+        """ Use a new fact to update the sender's trust value """
+        self.last_received_facts.append( (sender_neighbor, is_good) )
+        if (fact, sender_neighbor) in self.all_received_facts:
+            self.neighbor_spamminess[sender_neighbor] += 1
+        else:
+            self.all_received_facts.add((fact, sender_neighbor))
+        if len(self.last_received_facts) > self.trust_update_frequency:
+            self.process_trust()
+            
+    def get_neighbors_to_spam(self, fact):
+        """ If the agent is a spammer, remove a few
+        random neighbors from the already_sent list """
+        already_sent_tmp = list(self.history.get(fact,set()))
+        template = range(len(already_sent_tmp))
+        random.shuffle(template)
+        idx = int(len(template) * (1-self.spammer))
+        already_sent  = []
+        for i in template[:idx]:
+            already_sent.append( already_sent_tmp[ template[i]] )
+        already_sent = set(already_sent)
+        return already_sent
+        
+    def construct_send_list_with_trust(self, fact, to_send_tmp):
+        """ Construct the to_send list we'll append to the outbox """
+        """ This function should be moved and renamed once this code is made polymorphic """
+        template = []
+        to_send = []
+        
+        for i in range(len(to_send_tmp)):
+            n = to_send_tmp[i]
+            if self.trust_filter_on: ##only included trusted people
+                if self.trust[n].is_trusted:
+                    template.append( (self.trust[n].trust, i) )
+                else:
+                    self.num_filtered += 1
+            else:
+                template.append( (self.trust[n].trust, i) )
+        ## choose the least trusted people from to_send_tmp to exclude
+        template.sort()
+        idx = int(len(template) * (1-self.selfish))
+                
+        ## find the items to send, sort by trust if trust is used
+        for (t,i) in template[:idx]:
+            to_send.append( (t, fact, to_send_tmp[i]) )
+        to_send.sort(reverse = True)
+        return to_send
+        
+    def construct_send_list(self, fact, to_send_tmp):
+        """ Construct the to_send list we'll append to the outbox """
+        if self.selfish > 0:
+            for i in range(len(to_send_tmp)):
+                n = to_send_tmp[i]
+                if random.random() <= (1-self.selfish):
+                    to_send.append( (1, fact, to_send_tmp[i]) )
+        else:
+            for i in range(len(to_send_tmp)):
+                n = to_send_tmp[i]
+                to_send.append( (1, fact, to_send_tmp[i]) )
+        return to_send
+                        
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
         
         # Determine if the fact is valuable
-        is_good = self.is_fact_valuable(fact)
+        is_good = self.guess_value(fact)
         self.add_fact(fact)
-        if random.random() > self.competence and self.uses_knowledge:
-            ## process fact incorrectly
-            is_good = not is_good
 
         # If trust is considered, add this fact as evidence and spamminess
-        if self.trust_used:
-            if sender_neighbor: ## there is a sender for the fact
-                ## there is no sender for initial facts
-                self.last_received_facts.append( (sender_neighbor, is_good) )
-                if (fact, sender_neighbor) in self.all_received_facts:
-                    self.neighbor_spamminess[sender_neighbor] += 1
-                else:
-                    self.all_received_facts.add((fact, sender_neighbor))
-                if len(self.last_received_facts) > self.trust_update_frequency:
-                    self.process_trust()
+        if self.trust_used and sender_neighbor: #Only update if it's not an initial fact
+            self.update_trust(fact, is_good)
 
         ## Decide who to send the fact to based on spamminess and selfishness
         if is_good:
             if self.spammer > 0:
                 ## x% spammer person will send the same fact to x% of contacts.
-                already_sent_tmp = list(self.history.get(fact,set()))
-                template = range(len(already_sent_tmp))
-                random.shuffle(template)
-                idx = int(len(template) * (1-self.spammer))
-                already_sent  = []
-                for i in template[:idx]:
-                    already_sent.append( already_sent_tmp[ template[i]] )
-                already_sent = set(already_sent)
+                already_sent = self.get_neighbors_to_spam(fact)
             else:
                 already_sent = self.history.get(fact,set())
 
-            to_send = []
-            to_send_tmp = self.neighbors - already_sent
-            to_send_tmp = list(to_send_tmp)
-
-            template = []
+            to_send = self.neighbors - already_sent
+            to_send = list(to_send)
 
             ##selfishness code
             if self.trust_used: ##construct template based on trust
                 ## and exclude people if trust filter is on
-                for i in range(len(to_send_tmp)):
-                    n = to_send_tmp[i]
-                    if self.trust_filter_on: ##only included trusted people
-                        if self.trust[n].is_trusted:
-                            template.append( (self.trust[n].trust, i) )
-                        else:
-                            self.num_filtered += 1
-                    else:
-                        template.append( (self.trust[n].trust, i) )
-                ## choose the least trusted people from to_send_tmp to exclude
-                template.sort()
-                idx = int(len(template) * (1-self.selfish))
-                
-                ## find the items to send, sort by trust if trust is used
-                for (t,i) in template[:idx]:
-                    to_send.append( (t, fact, to_send_tmp[i]) )
-                to_send.sort(reverse = True)
+                to_send = self.construct_send_list_with_trust(fact, to_send_tmp)
+
             else:  ## no trust used
-                if self.selfish > 0:
-                    for i in range(len(to_send_tmp)):
-                        n = to_send_tmp[i]
-                        if random.random() <= (1-self.selfish):
-                            to_send.append( (1, fact, to_send_tmp[i]) )
-                else:
-                    for i in range(len(to_send_tmp)):
-                        n = to_send_tmp[i]
-                        to_send.append( (1, fact, to_send_tmp[i]) )
+                to_send = self.construct_send_list(fact, to_send_tmp)
 
             self.outbox.extend( to_send )
 
