@@ -48,6 +48,8 @@ Class for generating and implementing Agents.
  based processing and sends on the facts it has the highest
  certainty in. If False (default), it does not keep track of
  any confidence.
+ 
+:param int memory_size: The size of the working memory set
 
 """
 
@@ -60,7 +62,8 @@ class Agent(object):
     def __init__ (self, w=1, c=1, numfacts = 0, numnoise=0, \
                   spammer=0, selfish=0,  \
                   trust_used = True, inbox_trust_sorted = True, \
-                  trust_filter_on = True, capacity = 1, uses_knowledge=True):
+                  trust_filter_on = True, capacity = 1, uses_knowledge=True, 
+                  uses_confidence=False, memory_size = 7):
         ## General constants used in simulation
         self.NUM_FACTS = numfacts
         self.NUM_NOISE = numnoise
@@ -74,7 +77,8 @@ class Agent(object):
         self.spammer = spammer
         self.capacity = capacity
         self.trust_filter_on = trust_filter_on
-        self.uses_knowledge = uses_knowledge 
+        self.uses_knowledge = uses_knowledge
+        self.uses_confidence = uses_confidence
         # for hierarchy, all facts are considered valuable without
         # considering competence!
         self.spam_sensitivity = 0.2  # discount for spam behavior
@@ -83,6 +87,7 @@ class Agent(object):
         ## Action history
         self.inbox = []  ## list of (fact, sender_neighbor=None)
         self.outbox = []  ## list of (trust_for_receiver, fact, receiver) 
+        self.working_memory = [] ## Working memory for confidence
         self.last_received_facts = []
         self.all_received_facts = set([])
         ## all facts sent once to someone, used for performance optimization
@@ -190,6 +195,50 @@ class Agent(object):
         already_sent = set(already_sent)
         return already_sent
         
+    def update_confidence(self, index, sender_neighbor):
+        """ Update confidence for a fact in working memory """
+        confidence = working_memory[index][1]
+        update = 0.5
+###     if self.trust_used:
+##          update = ???
+        confidence = confidence + (1.0-confidence)*update
+        working_memory[index][1] = confidence
+        
+    def add_fact_to_working_memory(self, fact, sender_neighbor):
+        """ Given a new fact, update the working memory """
+        fact_combined = False
+        for i in range(len(working_memory)): ##Is it already in working memory?
+            if working_memory[i][0] == fact:
+               update_confidence(i, sender_neighbor)
+               fact_combined = True
+               break
+        
+        if not fact_combined: ##If it's not in working memory, add it to the end
+            confidence = 0.5
+##          if self.trust_used:
+##              confidence = ??? ##Quantify trust some how
+            working_memory.append( (fact, confidence) )
+            
+        for i in range(len(working_memory) - 1, 0, -1): ##Sort
+            if working_memory[i][1] > working_memory[i-1][1]:
+                working_memory[i], working_memory[i-1] = working_memory[i-1], working_memory[i]
+                
+        if len(working_memory) > memory_size: ##Make sure it's not too long
+            working_memory.pop()
+         
+    def construct_send_list(self, fact, to_send_tmp):
+        """ Construct the to_send list we'll append to the outbox """
+        if self.selfish > 0:
+            for i in range(len(to_send_tmp)):
+                n = to_send_tmp[i]
+                if random.random() <= (1-self.selfish):
+                    to_send.append( (1, fact, to_send_tmp[i]) )
+        else:
+            for i in range(len(to_send_tmp)):
+                n = to_send_tmp[i]
+                to_send.append( (1, fact, to_send_tmp[i]) )
+        return to_send
+      
     def construct_send_list_with_trust(self, fact, to_send_tmp):
         """ Construct the to_send list we'll append to the outbox """
         """ This function should be moved and renamed once this code is made polymorphic """
@@ -214,18 +263,19 @@ class Agent(object):
             to_send.append( (t, fact, to_send_tmp[i]) )
         to_send.sort(reverse = True)
         return to_send
-        
-    def construct_send_list(self, fact, to_send_tmp):
+
+    def construct_send_list_with_confidence(self, fact, to_send_tmp):
         """ Construct the to_send list we'll append to the outbox """
-        if self.selfish > 0:
-            for i in range(len(to_send_tmp)):
-                n = to_send_tmp[i]
-                if random.random() <= (1-self.selfish):
-                    to_send.append( (1, fact, to_send_tmp[i]) )
-        else:
-            for i in range(len(to_send_tmp)):
-                n = to_send_tmp[i]
-                to_send.append( (1, fact, to_send_tmp[i]) )
+        """ This function should be moved and renamed once this code is made polymorphic """ 
+        to_send=[]
+        
+        if working_memory[0][1] > confidence_threshold: ##If our top fact is above the threshold
+            fact = working_memory[0][0]                 ##Send it based on our normal functions
+            working_memory.pop(0)
+            if self.trust_used:
+                to_send = construct_send_list_with_trust(fact, to_send_tmp)
+            else:
+                to_send = construct_send_list(fact, to_send_tmp)
         return to_send
                         
     def process_fact(self, fact, sender_neighbor):
@@ -249,14 +299,19 @@ class Agent(object):
 
             to_send = self.neighbors - already_sent
             to_send = list(to_send)
+            
+            if self.uses_confidence and sender_neighbor:
+                self.add_fact_to_working_memory(fact, sender_neighbor) ##Update our working memory
 
             ##selfishness code
-            if self.trust_used: ##construct template based on trust
+            if self.uses_confidence and sender_neighbor: ##We should always send out initial facts
+                to_send = self.construct_send_list_with_confidence(fact, to_send)
+            elif self.trust_used: ##construct template based on trust
                 ## and exclude people if trust filter is on
-                to_send = self.construct_send_list_with_trust(fact, to_send_tmp)
+                to_send = self.construct_send_list_with_trust(fact, to_send)
 
             else:  ## no trust used
-                to_send = self.construct_send_list(fact, to_send_tmp)
+                to_send = self.construct_send_list(fact, to_send)
 
             self.outbox.extend( to_send )
 
