@@ -1,8 +1,9 @@
-agentsimulation
-===============
+taNdem: Agent Simulation Package
+=================================
 
-Agent based simulation of information sharing in networks based on trust. Implemented in Python, 
-uses Network module.
+This program implements an agent based simulation of information
+sharing in networks based on trust called taNdem. It is implemented in
+Python and uses the networkx module.
 
 Copyright (c) 2014, Sibel Adali
 
