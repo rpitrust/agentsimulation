@@ -1,5 +1,5 @@
 
-Running the agent simulation model
+Running the taNdem simulation model
 ====================================
 
 There are alternate ways to run the simulation model. The methods go

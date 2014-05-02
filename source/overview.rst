@@ -1,6 +1,6 @@
 
-Overview of the Agent Simulation Package
-=========================================
+Overview of the taNdem Simulation Package
+==========================================
 
 This package implements an agent scenario in which agents share
 information with each other in a networked setting. The package
@@ -68,7 +68,7 @@ characteristics are summarized below.
    Depending on the scenario, this can be adjusted. When set to zero, 
    spamming of others does not effect the trust ratings.
 
-The :mod:`Agent` module sets these parameters.
+The :class:`Agent` module sets these parameters.
 
    https://github.com/rpitrust/agentsimulation/blob/master/Agent.py
 

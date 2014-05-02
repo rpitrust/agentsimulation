@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Agent Based Simulation of Information Sharing in Networks
+taNdem: A Trust-based Agent Framework for Networked Decision Making
 ==========================================================================
 
 The codebase for this package can be found at:

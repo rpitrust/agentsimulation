@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Trust and Information Sharing Agent Simulation 1 documentation" href="index.html" />
-    <link rel="prev" title="Running the agent simulation model" href="running.html" /> 
+    <link rel="prev" title="Running the taNdem simulation model" href="running.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="running.html" title="Running the agent simulation model"
+          <a href="running.html" title="Running the taNdem simulation model"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
       </ul>
@@ -54,15 +54,20 @@
 <span id="class-agent-implements-functionality-of-a-single-agent"></span><h2><strong>Class:</strong> <a class="reference internal" href="#module-Agent" title="Agent"><tt class="xref py py-class docutils literal"><span class="pre">Agent</span></tt></a> &#8212; Implements functionality of a single agent<a class="headerlink" href="#module-Agent" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Agent.Agent">
-<em class="property">class </em><tt class="descclassname">Agent.</tt><tt class="descname">Agent</tt><big>(</big><em>w</em>, <em>c</em>, <em>numfacts</em>, <em>numnoise</em>, <em>spam</em>, <em>selfish</em>, <em>trust_used</em>, <em>inbox_trust_sorted</em>, <em>trust_filter_on</em>, <em>capacity</em><big>)</big><a class="reference internal" href="_modules/Agent.html#Agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Agent.Agent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">Agent.</tt><tt class="descname">Agent</tt><a class="reference internal" href="_modules/Agent.html#Agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Agent.Agent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="Agent.Agent.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>w=1</em>, <em>c=1</em>, <em>numfacts=0</em>, <em>numnoise=0</em>, <em>spammer=0</em>, <em>selfish=0</em>, <em>trust_used=True</em>, <em>inbox_trust_sorted=True</em>, <em>trust_filter_on=True</em>, <em>capacity=1</em>, <em>uses_knowledge=True</em><big>)</big><a class="reference internal" href="_modules/Agent.html#Agent.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Agent.Agent.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 <p>Class for generating and implementing Agents.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">member int numfacts:</th></tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param int numfacts:</th></tr>
 <tr class="field-odd field"><td>&nbsp;</td><td class="field-body">number of facts in the simulation 
 that are valuable</td>
 </tr>
@@ -70,9 +75,11 @@ that are valuable</td>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body">number of facts in the simulation 
 that are noise</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">param float w:</th><td class="field-body">how frequently an agent will act</td>
+<tr class="field-odd field"><th class="field-name" colspan="2">param float will:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">how frequently an agent will act</td>
 </tr>
-<tr class="field-even field"><th class="field-name">param float c:</th><td class="field-body">how frequently the agent will a fact 
+<tr class="field-even field"><th class="field-name" colspan="2">param float comp:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">how frequently the agent will a fact 
 as valuable or not correctly (1: always, p: 
 p% of the time)</td>
 </tr>
@@ -89,6 +96,26 @@ a fact and not send at all to a specific person
 <tr class="field-odd field"><td>&nbsp;</td><td class="field-body">how many actions an agent can take 
 at each simulation step, 1 by default to implement 
 agents with limited cognitive resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param Boolean trust_used:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">If True (default), keeps statistics 
+about Trust and sorts outbox by how much each neighbor is trusted</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param Boolean inbox_trust_sorted:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">If True (default), periodically
+sorts the inbox by trust, processing facts from trusted neighbors
+first</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param Boolean trust_filter_on:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">If True (default), it only sends
+messages out to neighbors that are minimally trusted, the rest
+are filtered out.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param Boolean uses_knowledge:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">True (default) if agent uses
+knowledge based processing and sends only facts it considers
+valuable. If False: it sends all facts regardless of value, used
+for hierarchical processing.</td>
 </tr>
 </tbody>
 </table>
@@ -148,7 +175,7 @@ belief for all neighbors, same format as prior_comp.</li>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="running.html"
-                        title="previous chapter">Running the agent simulation model</a></p>
+                        title="previous chapter">Running the taNdem simulation model</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/classes.txt"
@@ -181,7 +208,7 @@ belief for all neighbors, same format as prior_comp.</li>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="running.html" title="Running the agent simulation model"
+          <a href="running.html" title="Running the taNdem simulation model"
              >previous</a> |</li>
         <li><a href="index.html">Trust and Information Sharing Agent Simulation 1 documentation</a> &raquo;</li> 
       </ul>
