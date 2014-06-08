@@ -67,10 +67,10 @@ def run_simulation_one_graph(properties, outfile):
         agent1.connect_to(conn.neighbors(agent1))
 
     nodes_to_try = top_nodes (stats)        
-    print "Nodes", nodes_to_try
+    #print "Nodes", nodes_to_try
 
     for current_agent in nodes_to_try:
-        print "New node", current_agent
+        #print "New node", current_agent
         agents[current_agent].capacity = 10 ##set one agent to high capacity
         node_stats = current_agent_stats (current_agent, stats)
     
