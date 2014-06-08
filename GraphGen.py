@@ -7,6 +7,46 @@ import random
 import math
 import networkx as nx
 
+def create_graph_type(objects, properties):
+    graph_type = properties['graph_type']
+    n = len(objects)-1
+    if 'num_nodes_to_attach' not in properties.keys():
+        k = properties['num_nodes_to_attach']
+    else:
+        k = 5
+    r = properties['connection_probability']
+
+    if graph_type == 'random':
+        x = nx.fast_gnp_random_graph(n,r)
+    elif graph_type == 'watts_strogatz_graph':
+        x = nx.watts_strogatz_graph(n, k, r)
+    elif graph_type == 'newman_watts_strogatz_graph':
+        x = nx.newman_watts_strogatz_graph(n, k, r)
+    elif graph_type == 'barabasi_albert_graph':
+        x = nx.barabasi_albert_graph(n, k, r)
+    elif graph_type == 'powerlaw_cluster_graph':
+        x = nx.powerlaw_cluster_graph(n, k, r)
+    elif graph_type == 'cycle_graph':
+        x = nx.cycle_graph(n)
+    else: ##Star by default
+        x = nx.star_graph(len(objects)-1)
+
+    cc = nx.closeness_centrality(x)
+    bc = nx.betweenness_centrality(x)
+    deg = nx.degree_centrality(x)
+    cc_conn = nx.connected_components(x)
+
+    stats = {'cc':cc, 'bc':bc, 'deg':deg, \
+             'num_cc':len(cc_conn), 'largest_cc':len(cc_conn[0])}
+
+
+    conn = nx.Graph()
+    for (i,j) in x.edges():
+        inode = objects[i]
+        jnode = objects[j]
+        conn.add_edge(inode, jnode)
+    return conn, stats
+
 def random_directed_graph(objects, p):
     conn = nx.DiGraph()
     for object1 in objects:

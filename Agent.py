@@ -94,6 +94,25 @@ class Agent(object):
         self.neighbor_spamminess = {}
         self.num_filtered = 0
 
+    def clear (self):
+        """Clears all history, but leaves intact personal properties."""
+        self.inbox = []  ## list of (fact, sender_neighbor=None)
+        self.outbox = []  ## list of (trust_for_receiver, fact, receiver) 
+        self.last_received_facts = []
+        self.all_received_facts = set([])
+        ## all facts sent once to someone, used for performance optimization
+        self.sentfacts = set([])  
+        self.numsent = 0 ## number of facts sent
+        self.knowledge = set([]) ## id of all facts known, spam or valuable
+        self.history = {} ## key:fact, value: set of neighbors fact is sent to
+        self.time_spent = 0 ## simulation time, number of times act is executed
+        self.trust_update_frequency = 10
+
+        ## Network based properties, beliefs
+        self.trust = {}  ## Key: neighbor, Value: Trust object
+        self.neighbor_spamminess = {}
+        self.num_filtered = 0
+
     def get_trust_for_neighbors( self ):
         line = ""
         for n in self.neighbors:
