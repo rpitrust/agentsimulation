@@ -1,12 +1,14 @@
 """ Keeping track of statistics for agents
 
+    This version assumes that there is no noise
+
 """
 
 from simutil import * 
 
-class SimulationStats(object):
+class SimpleSimulationStats(object):
 
-        def __init__ (self, NUM_FACTS, NUM_NOISE, num_cc=0, size_lcc=0, sa_increment=10):
+        def __init__ (self, NUM_FACTS, NUM_NOISE, num_cc=0, size_lcc=0, sa_increment=10, sa0_agentid = 0):
             self.NUM_FACTS = float(NUM_FACTS)
             self.NUM_NOISE = NUM_NOISE
             self.sa = []  ## triples of the form mean, std, max sa of all agents
@@ -21,48 +23,13 @@ class SimulationStats(object):
             self.num_appended = 1.0 ## how many stats objects are combined
             self.EPSILON = 0.01
             self.sa_increment = sa_increment
+            self.sa0_agentid = sa0_agentid ## the id of the specific agent to track
 
         def __str__ (self):
             return (str(self.sa0) + "\n" + str(self.comm))
 
-        def merge_stats( self, other ):
-            for i in xrange(len(self.steps)):
-                self.sa[i][0] += other.sa[i][0]
-                self.sa[i][1] += other.sa[i][1]
-                self.sa[i][2] += other.sa[i][2]
-                self.sa0[i] += other.sa0[i]
-                self.comm[i] += other.comm[i]
-                self.comm0[i] += other.comm0[i]
-                self.total_filtered += other.total_filtered
-                self.num_cc += other.num_cc
-                self.size_lcc += other.size_lcc
-            self.num_appended += 1
-
-        def normalize( self ):
-            for i in xrange(len(self.steps)):
-                self.sa[i][0] /= self.num_appended
-                self.sa[i][1] /= self.num_appended
-                self.sa[i][2] /= self.num_appended
-                self.sa0[i] /= self.num_appended
-                self.comm[i] /= self.num_appended
-                self.comm0[i] /= self.num_appended
-            self.total_filtered /= self.num_appended
-            self.num_cc /= self.num_appended
-            self.size_lcc /= self.num_appended
-            self.num_appended = 1.0
-
         def num_good_facts(self, agent):
-            x = list( agent.knowledge )
-            x.sort()
-            last_fact = -1
-            for i in x:
-                if i > self.NUM_FACTS:
-                    last_fact = i
-                    break
-            if last_fact == -1:
-                return len(x)
-            else:
-                return x.index(last_fact)-1
+            return len(agent.facts_known)
         
         def find_sa(self, agents):
             cur_sa = []
@@ -80,16 +47,15 @@ class SimulationStats(object):
 
         def update_stats(self, agents, steps):
             (maxsa, (m,s)) = self.find_sa(agents)
-            self.sa0.append( self.num_good_facts(agents[0]) )
+            self.sa0.append( self.num_good_facts(agents[self.sa0_agentid]) )
             self.sa.append ( [m,s, maxsa] )
             (c,f) = self.full_comms(agents)
             self.comm.append(c)
-            self.comm0.append( agents[0].numsent )
+            self.comm0.append( agents[self.sa0_agentid].numsent )
             self.total_filtered += f
             self.steps.append(steps)
 
         def process_sa( self ):
-            self.normalize()
 
             ## First AVG SA processing
             ## Find max value 

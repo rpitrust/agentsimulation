@@ -123,8 +123,7 @@ def run_simulation_one_graph(properties, outfile):
 def run_simulation(properties, outfile):
     for i in xrange( properties['num_trial'] ):
         run_simulation_one_graph(properties, outfile)
-        if i%10==0:
-            print "Iteration", i
+        print "Iteration", i
 
 ########## Main body
 
@@ -132,17 +131,17 @@ if __name__ == '__main__':
     gtypes = ['random', 'watts_strogatz_graph', \
               'newman_watts_strogatz_graph', 'barabasi_albert_graph', \
               'powerlaw_cluster_graph', 'cycle_graph', 'star' ]
-    gtypes = ['watts_strogatz_graph', \
-              'barabasi_albert_graph', \
+    gtypes = ['barabasi_albert_graph', \
+              'watts_strogatz_graph', \
               'powerlaw_cluster_graph' ]
     random.seed(10)
     properties = {'connection_probability': 0.5, \
-                  'num_nodes_to_attach': 5, \
+                  'num_nodes_to_attach': 3, \
                   'graph_type':'star',\
                   'num_agents': 20, \
                   'agent_per_fact':1,\
-                  'num_steps':50000,\
-                  'num_trial':50,\
+                  'num_steps':20000,\
+                  'num_trial':10,\
                   'num_facts':50000,\
                   'num_noise':0,\
                   'trust_used':False,\
