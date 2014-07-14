@@ -7,6 +7,7 @@ import networkx as nx
 from simutil import * 
 import simplejson as sj
 import time
+import sys
 
 def current_agent_stats (current_agent, stats):
     node_stats = {}
@@ -31,10 +32,18 @@ def top_nodes (stats):
         nodes.append(node)
     return nodes
 
-def add_to_output(results, outfile):
+def add_to_output(all_results, results, outfile):
+    all_results.append(results)
+    if len(all_results) > 20:
+        flush_results(all_results, outfile)
+
+def flush_results(all_results, outfile):
     f = open(outfile,"a")
-    f.write( sj.dumps(results) + "\n")
+    for result in all_results:
+        f.write( sj.dumps(result) + "\n")
     f.close()
+    all_results = []
+
 
 ########## Run simulation
 def one_step_simulation(agents):
@@ -50,6 +59,7 @@ def one_step_simulation(agents):
 def run_simulation_one_graph(properties, outfile):
     facts = range(properties['num_facts']+properties['num_noise'])
     agents = []
+    all_results = []
     for i in xrange(properties['num_agents']):
         agents.append ( SimpleAgent.SimpleAgent(properties['willingness'],\
                                                 properties['competence'],\
@@ -110,8 +120,9 @@ def run_simulation_one_graph(properties, outfile):
         summary_results = all_stats.process_sa()
     
         results = {}
-        #results['setup'] = properties
+        results['setup'] = properties
         results['graph_type'] = properties['graph_type']
+
         results['total_filtered'] = summary_results['total_filtered']
         results['num_cc'] = summary_results['num_cc']
         results['size_lcc'] = summary_results['size_lcc']
@@ -123,12 +134,12 @@ def run_simulation_one_graph(properties, outfile):
         results['steps'] = all_stats.steps
         results['node_stats'] = node_stats
 
-        add_to_output(results, outfile)
+        add_to_output(all_results, results, outfile)
         
         for agent in agents:
             agent.clear()
             agent.capacity = 1
-
+    flush_results(all_results, outfile)
 
 def run_simulation(properties, outfile):
     for i in xrange( properties['num_trial'] ):
@@ -141,20 +152,26 @@ def run_simulation(properties, outfile):
 ########## Main body
 
 if __name__ == '__main__':
-    gtypes = ['random', 'watts_strogatz_graph', \
-              'newman_watts_strogatz_graph', 'barabasi_albert_graph', \
-              'powerlaw_cluster_graph', 'cycle_graph', 'star' ]
-    gtypes = ['random', 'watts_strogatz_graph', \
-              'newman_watts_strogatz_graph', 'barabasi_albert_graph', \
-              'powerlaw_cluster_graph' ]
     random.seed(10)
+
+    gtypes = [('random', 20, 0.15, 3), \
+              ('watts_strogatz_graph', 20, 0.1, 5), \
+              ('barabasi_albert_graph', 20, 0.1, 10), \
+    ]
+
+    gtypes2 = [\
+              ('random', 200, 0.03, 3), \
+              ('watts_strogatz_graph', 200, 0.01, 8), \
+              ('barabasi_albert_graph', 200, 0.01, 20), \
+    ]
+
     properties = {'connection_probability': 0.5, \
                   'num_nodes_to_attach': 5, \
-                  'graph_type':'star',\
+                  'graph_type':'random',\
                   'num_agents': 200, \
                   'agent_per_fact':1,\
                   'num_steps':10000,\
-                  'num_trial':2,\
+                  'num_trial':200,\
                   'statistic_taking_frequency': 1000, \
                   'num_facts':5000,\
                   'num_noise':0,\
@@ -168,13 +185,25 @@ if __name__ == '__main__':
                   'spamminess':0,\
                   'selfishness':0}
 
-    outfile = "gtype_results.txt"
+    if len(sys) > 1:
+        outfile = sys.argv[1]
+    else:
+        outfile = "gtype_results.txt"
+
     f = open(outfile,"a")
     f.write( sj.dumps(properties) + "\n")
     f.close()
     
-    for g in gtypes:
+    for (g,x,y,z) in gtypes:
         properties['graph_type'] = g
-        print "starting with", g, "and", properties['num_agents']
+        properties['num_agents'] = x
+        properties['connection_probability'] = y
+        properties['num_nodes_to_attach'] = z
+        if properties['num_agents'] == 20:
+            properties['statistic_taking_frequency']= 500
+        else:
+            properties['statistic_taking_frequency']= 1000
+
+        print "starting with", g,x,y,z
         run_simulation(properties, outfile)
         
