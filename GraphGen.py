@@ -142,3 +142,4 @@ def hierarchy_graph(objects):
     conn.node[objects[0]]['rank'] = 0
 
     return conn
+

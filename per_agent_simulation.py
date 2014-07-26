@@ -69,7 +69,8 @@ def run_simulation_one_graph(properties, outfile):
                                                 properties['selfishness'],\
                                                 properties['trust_used'],\
                                                 properties['inbox_trust_used'],\
-                                                properties['trust_filter_on']) )
+                                                properties['trust_filter_on'],
+                                                twitter_model = properties['twitter_model']))
         
     ## Create agent graph
     conn, stats = gg.create_graph_type(agents, properties)
@@ -154,24 +155,41 @@ def run_simulation(properties, outfile):
 if __name__ == '__main__':
     random.seed(10)
 
-    gtypes = [('random', 20, 0.15, 3), \
-              ('watts_strogatz_graph', 20, 0.1, 5), \
-              ('barabasi_albert_graph', 20, 0.1, 10), \
+    """
+    gtypes = [('random', 20, 0.15, 3), \                                       
+              ('random', 20, 0.03, 3), \                                   
+              ('random', 20, 0.3, 3), \                                    
+              ('barabasi_albert_graph', 20, 0.1, 5), \                         
+              ('barabasi_albert_graph', 20, 0.1, 10), \                    
+              ('barabasi_albert_graph', 20, 0.01, 20), \                   
+              ('watts_strogatz_graph', 20, 0.1, 3), \                           
+              ('watts_strogatz_graph', 20, 0.01, 8), \                      
+              ('watts_strogatz_graph', 20, 0.1, 8), \                       
+              ('watts_strogatz_graph', 20, 0.2, 5), \                       
+    ]                                                             
+
+    """
+
+    gtypes = [('random', 40, 0.1, 3), \
+              ('random', 40, 0.2, 3), \
+              ('random', 40, 0.3, 3), \
+              ('barabasi_albert_graph', 40, 0.1, 3), \
     ]
 
-    gtypes2 = [\
-              ('random', 200, 0.03, 3), \
-              ('watts_strogatz_graph', 200, 0.01, 8), \
-              ('barabasi_albert_graph', 200, 0.01, 20), \
+    gtypes2 = [('barabasi_albert_graph', 40, 0.1, 8), \
+              ('barabasi_albert_graph', 40, 0.1, 15), \
+              ('watts_strogatz_graph', 40, 0.1, 3), \
+              ('watts_strogatz_graph', 40, 0.1, 8), \
+              ('watts_strogatz_graph', 40, 0.1, 15), \
     ]
 
     properties = {'connection_probability': 0.5, \
                   'num_nodes_to_attach': 5, \
                   'graph_type':'random',\
-                  'num_agents': 200, \
+                  'num_agents': 40, \
                   'agent_per_fact':1,\
                   'num_steps':10000,\
-                  'num_trial':200,\
+                  'num_trial':100,\
                   'statistic_taking_frequency': 1000, \
                   'num_facts':5000,\
                   'num_noise':0,\
@@ -183,12 +201,14 @@ if __name__ == '__main__':
                   'competence':1,\
                   'willingness':1,\
                   'spamminess':0,\
-                  'selfishness':0}
+                  'selfishness':0,\
+                  'twitter_model':True }
 
-    if len(sys) > 1:
+    if len(sys.argv) > 1:
         outfile = sys.argv[1]
     else:
         outfile = "gtype_results.txt"
+    print "Writing results to", outfile
 
     f = open(outfile,"a")
     f.write( sj.dumps(properties) + "\n")

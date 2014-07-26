@@ -38,6 +38,11 @@ if __name__ =="__main__":
               ('barabasi_albert_graph', 200, 0.01, 20), \
     ]
 
+    gtypes = [('watts_strogatz_graph', 40, 0.1, 3), \
+              ('watts_strogatz_graph', 40, 0.1, 8), \
+              ('watts_strogatz_graph', 40, 0.1, 15), \
+    ]
+
     for (g,x,y,z) in gtypes:
         p['graph_type'] = g
         p['num_agents'] = x
@@ -51,4 +56,4 @@ if __name__ =="__main__":
         print p
         print "Connected components:", stats['num_cc']
         histogram(stats, 20*(1+int(p['num_agents']/60)))
-        raw_input("...")
+

@@ -41,7 +41,8 @@ class SimpleAgent(object):
     def __init__ (self, w=1, c=1, numfacts = 0, numnoise=0, \
                   spammer=0, selfish=0,  \
                   trust_used = False, inbox_trust_sorted = False, \
-                  trust_filter_on = False, capacity = 1, uses_knowledge=True):
+                  trust_filter_on = False, capacity = 1, \
+                  uses_knowledge=True, twitter_model=False ):
         ## General constants used in simulation
         self.NUM_FACTS = numfacts
         self.NUM_NOISE = numnoise
@@ -69,6 +70,7 @@ class SimpleAgent(object):
         ## Network based properties, beliefs
         self.neighbors = set([])
         self.num_filtered = 0
+        self.twitter_model = twitter_model
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -122,6 +124,25 @@ class SimpleAgent(object):
         else:
             return False
 
+    def tweet_fact(self, fact, neighbor):
+        # Determine if the fact is valuable
+        is_good = self.is_fact_valuable(fact)
+        known = fact in self.facts_known
+
+        self.add_fact(fact, is_good)
+        if random.random() > self.competence:
+            ## process fact incorrectly
+            is_good = not is_good
+        
+        actions_taken = []
+        ## Send to everyone, broadcast model as long as this is a new fact
+        if is_good and not known:
+            for n in self.neighbors:
+                self.numsent += 1
+                self.history[fact].add(n)
+                actions_taken.append((n, fact))
+        return actions_taken
+
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
         
@@ -165,7 +186,10 @@ class SimpleAgent(object):
 
     def receive(self, fact, neighbor):
         """ Receive a fact from another neighbor. """
-        self.inbox.append((fact, neighbor))
+        if self.twitter_model: ## insert to the top
+            self.inbox.insert(0, (fact, neighbor))
+        else:
+            self.inbox.append((fact, neighbor))
 
     def act(self):
         """ 
@@ -181,14 +205,21 @@ class SimpleAgent(object):
             ### By willingness probability, decide whether to act or not
             if random.random() <= self.willingness:
                 ## Agent decided to act
-                if len(self.outbox) != 0: ##outbox is not empty:
-                    ### Take the first action from the outbox
-                    self.numsent += 1
-                    (trust, fact, n) =  self.outbox.pop(0)
-                    self.history[fact].add(n)
-                    actions_taken.append((n, fact))
-                elif len(self.inbox) != 0: # decision is inbox
-                    ### Process the first fact in the inbox and queue to outbox 
-                    (fact, neighbor) = self.inbox.pop(0)
-                    self.process_fact(fact, neighbor)
+                if self.twitter_model:
+                    if len(self.inbox) != 0: # decision is inbox
+                        ### Process the first fact in the inbox and
+                        ### immediately send to all the neighbors
+                        (fact, neighbor) = self.inbox.pop(0)
+                        actions_taken = self.tweet_fact(fact, neighbor)
+                else:
+                    if len(self.outbox) != 0: ##outbox is not empty:
+                        ### Take the first action from the outbox
+                        self.numsent += 1
+                        (trust, fact, n) =  self.outbox.pop(0)
+                        self.history[fact].add(n)
+                        actions_taken.append((n, fact))
+                    elif len(self.inbox) != 0: # decision is inbox
+                        ### Process the first fact in the inbox and queue to outbox 
+                        (fact, neighbor) = self.inbox.pop(0)
+                        self.process_fact(fact, neighbor)
         return actions_taken  ## No send action was taken
