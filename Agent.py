@@ -48,6 +48,7 @@ Class for generating and implementing Agents.
 
 import random 
 import Trust
+import Fact
 from simutil import *
 
 class Agent(object):
@@ -93,6 +94,9 @@ class Agent(object):
         self.trust = {}  ## Key: neighbor, Value: Trust object
         self.neighbor_spamminess = {}
         self.num_filtered = 0
+        
+        self.nf_cognition = 1
+        self.nf_closure = 1
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -162,43 +166,50 @@ class Agent(object):
     def is_fact_valuable(self,fact):
         """ Return the ground truth of whether the fact is
         valuable. """
-        if not (self.uses_knowledge): 
-        ##always think everything is valuable, used for hierarchies
-            return True
-        if (0 <= fact < self.NUM_FACTS):
-            return True
-        elif (self.NUM_FACTS <= fact < (self.NUM_FACTS + self.NUM_NOISE)):
-            return False
-        else:
-            return None  ## Invalid fact.
+        return fact.is_valuable()
+        
+    def fact_index(self, id):
+        for index, fact in enumerate(self.knowledge):
+            if (fact.id() == id):
+                return index
+        return -1
 
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
         
         # Determine if the fact is valuable
-        is_good = self.is_fact_valuable(fact)
-        self.add_fact(fact)
-        if random.random() > self.competence and self.uses_knowledge:
-            ## process fact incorrectly
-            is_good = not is_good
+        index = self.fact_index(fact.id())
+        
+        if(index == -1): #This is our first time seeing it
+            fact = Fact.Fact(fact.is_valuable(), fact.id()) #Reinitialize, and add to knowledge
+            fact.judgment()
+            self.add_fact(fact)
+            index = len(self.knowledge) - 1
+            
+        if(sender_neighbor and not (fact.id(), sender_neighbor) in self.all_received_facts): #We got this from a neighbor, so deal with new information
+            self.knowledge[index].propagate_belief()
+            self.knowledge[index].aggregate_belief(self.nf_cognition)
+            self.knowledge[index].decide(self.nf_cognition, self.nf_closure)
+            
+        
 
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
             if sender_neighbor: ## there is a sender for the fact
                 ## there is no sender for initial facts
-                self.last_received_facts.append( (sender_neighbor, is_good) )
-                if (fact, sender_neighbor) in self.all_received_facts:
+                self.last_received_facts.append( (sender_neighbor, self.knowledge[index].decision()) )
+                if (fact.id(), sender_neighbor) in self.all_received_facts:
                     self.neighbor_spamminess[sender_neighbor] += 1
                 else:
-                    self.all_received_facts.add((fact, sender_neighbor))
+                    self.all_received_facts.add((fact.id(), sender_neighbor))
                 if len(self.last_received_facts) > self.trust_update_frequency:
                     self.process_trust()
 
         ## Decide who to send the fact to based on spamminess and selfishness
-        if is_good:
+        if self.knowledge[index].decision():
             if self.spammer > 0:
                 ## x% spammer person will send the same fact to x% of contacts.
-                already_sent_tmp = list(self.history.get(fact,set()))
+                already_sent_tmp = list(self.history.get(fact.id(),set()))
                 template = range(len(already_sent_tmp))
                 random.shuffle(template)
                 idx = int(len(template) * (1-self.spammer))
@@ -207,7 +218,7 @@ class Agent(object):
                     already_sent.append( already_sent_tmp[ template[i]] )
                 already_sent = set(already_sent)
             else:
-                already_sent = self.history.get(fact,set())
+                already_sent = self.history.get(fact.id(),set())
 
             to_send = []
             to_send_tmp = self.neighbors - already_sent
@@ -233,18 +244,18 @@ class Agent(object):
                 
                 ## find the items to send, sort by trust if trust is used
                 for (t,i) in template[:idx]:
-                    to_send.append( (t, fact, to_send_tmp[i]) )
+                    to_send.append( (t, fact.id(), to_send_tmp[i]) )
                 to_send.sort(reverse = True)
             else:  ## no trust used
                 if self.selfish > 0:
                     for i in range(len(to_send_tmp)):
                         n = to_send_tmp[i]
                         if random.random() <= (1-self.selfish):
-                            to_send.append( (1, fact, to_send_tmp[i]) )
+                            to_send.append( (1, fact.id(), to_send_tmp[i]) )
                 else:
                     for i in range(len(to_send_tmp)):
                         n = to_send_tmp[i]
-                        to_send.append( (1, fact, to_send_tmp[i]) )
+                        to_send.append( (1, fact.id(), to_send_tmp[i]) )
 
             self.outbox.extend( to_send )
 
@@ -281,7 +292,7 @@ class Agent(object):
                     else:
                         self.history[fact] = set([n])
                     self.sentfacts.add(fact)
-                    actions_taken.append((n, fact))
+                    actions_taken.append((n, self.knowledge[self.fact_index(fact)]))
                 elif len(self.inbox) != 0: # decision is inbox
                     ### Process the first fact in the inbox and queue to outbox 
                     (fact, neighbor) = self.inbox.pop(0)
