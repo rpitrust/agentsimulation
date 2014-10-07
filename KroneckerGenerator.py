@@ -4,13 +4,21 @@ import math
 import random
 
 
-
 def convert(something):#use networkx conversion from numpy array
     #g = nx.from_numpy_matrix(someNPMat)
     g = nx.to_networkx_graph(something)
     return g
 
-def generateStochasticKron(initMat, k, directed=False, customEdges=False, edges=0):
+def deleteSelfLoops(graph, nNodes): #used to take away self loops in final graph for stat purposes
+    nNodes = int(nNodes)
+    for i in range(nNodes):
+        for j in range(nNodes):
+            if(i ==  j):
+                graph[i, j] = 0
+    return graph
+    
+
+def generateStochasticKron(initMat, k, deleteSelfLoopsForStats=False, directed=False, customEdges=False, edges=0):
     initN = initMat.getNumNodes()
     nNodes = math.pow(initN, k)#get final size and make empty 'kroned' matrix
     mtxDim = initMat.getNumNodes()
@@ -71,6 +79,9 @@ def generateStochasticKron(initMat, k, directed=False, customEdges=False, edges=
         else:
             collisions += 1
     print "Collisions: "
-    print collisions #testing  
+    print collisions #testing
+    #delete self loops if needed for stats
+    if(deleteSelfLoopsForStats):
+        finalGraph = deleteSelfLoops(finalGraph, nNodes)
     finalGraph = convert(finalGraph)
     return finalGraph
