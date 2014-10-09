@@ -32,7 +32,17 @@ class InitMatrix():
         initMat = np.zeros((n, n)) #Creates corret size of init matrix with all 0s
         self.W = initMat
 
-    def makeStochastic(self, alpha, beta, selfloops=True):
+    def makeStochasticCustom(self, probArr): #takes np array of probs for each position in init matrix
+        n = self.numNodes
+        length = n*n
+        if(probArr.shape[0] != length):
+            raise IOError("Your array must be the length of postitions in your initMatrix")
+        for i in range(n):
+            for j in range(n):
+                for k in range(length):
+                    self.setValue(probArr[k], i, j)
+
+    def makeStochasticAB(self, alpha, beta, selfloops=True):
         #parm check
         if (not(0.00 <= alpha <= 1.00)):
             raise IOError("alpha (arguement 1) must be a value equal to or between 0 and 1; it is a probability")
@@ -51,6 +61,14 @@ class InitMatrix():
                     self.setValue(beta, i, j)
                 else:
                     self.setValue(alpha, i, j)
+
+    def makeRand(self): #not implemented yet
+        n = self.numNodes #getNumNodes(self)
+        s = (n, n)
+        initMat = np.zeros(s)
+        
+        #generate a init matrix that is 40% dense with self loops
+        #implement here
 
     def addEdge(self, node1, node2, edge=1):
         node1 = int(node1)
