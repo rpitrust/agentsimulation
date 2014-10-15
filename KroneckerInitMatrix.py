@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 
 class InitMatrix():
 
@@ -62,13 +63,33 @@ class InitMatrix():
                 else:
                     self.setValue(alpha, i, j)
 
-    def makeRand(self): #not implemented yet
-        n = self.numNodes #getNumNodes(self)
-        s = (n, n)
-        initMat = np.zeros(s)
+    def makeStochasticABFromNetworkxGraph(self, nxgraph, alpha, beta): #takes a nxgraph, alpha, and beta. Returns stochastic initMatrix.
+        adjMatrix = nx.to_numpy_matrix(nxgraph) #return graph adj matrix as a np matrix
+
+        n = adjMatrix.shape[0] #get num nodes
+
+        init = InitMatrix(n)
+        init.make()
+        for i in range(n):
+            for j in range(n):
+                init.setValue(adjMatrix[i, j], i, j)
+        init.makeStochasticAB(alpha, beta)
+
+        return init #there is no gaurentee of self loops since these are other graph types generated as seeds
+
+    def makeFromNetworkxGraph(self, nxgraph): #takes a nxgraph, Returns initMatrix.
+        adjMatrix = nx.to_numpy_matrix(nxgraph) #return graph adj matrix as a np matrix
+
+        n = adjMatrix.shape[0] #get num nodes
+
+        init = InitMatrix(n)
+        init.make()
+        for i in range(n):
+            for j in range(n):
+                init.setValue(adjMatrix[i, j], i, j)
+
+        return init #there is no gaurentee of self loops since these are other graph types generated as seeds
         
-        #generate a init matrix that is 40% dense with self loops
-        #implement here
 
     def addEdge(self, node1, node2, edge=1):
         node1 = int(node1)
@@ -77,3 +98,8 @@ class InitMatrix():
             raise ValueError("Cannot add a zero or infinite edge")
 
         self.W[node1, node2] = edge
+
+    def addSelfEdges(self):
+        n = self.getNumNodes()
+        for i in range(n):
+            self.addEdge(i, i)
