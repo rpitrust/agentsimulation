@@ -84,21 +84,25 @@ def one_step_simulation(agents):
     return num_actions
 
 
-def multi_step_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
-                          AGENT_PER_FACT, CONNECTION_PROBABILITY, \
+def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
+                          NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                           NUM_STEPS, WILLINGNESS, COMPETENCE, \
+                          ENGAGEMENT, UNCERTAINTY_HANDLING, \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
                           TRUST_USED=True, INBOX_TRUST_SORTED=False, \
                           TRUST_FILTER_ON=True):
     
-    facts = range(NUM_FACTS + NUM_NOISE)
+    facts = range((NUM_FPRO + NUM_FCON + NUM_NPRO + NUM_NCON)*NUM_GROUPS)
     ##print "Created", len(facts), "facts"
 
     agents = []
     for i in xrange(NUM_AGENTS):
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
-                                    NUM_FACTS, NUM_NOISE,\
+                                    ENGAGEMENT, UNCERTAINTY_HANDLING, \
+                                    NUM_FPRO, NUM_FCON,\
+                                    NUM_NPRO, NUM_NCON, \
+                                    NUM_GROUPS, \
                                     SPAMMINESS, SELFISHNESS, \
                                     TRUST_USED, INBOX_TRUST_SORTED, \
                                     TRUST_FILTER_ON) )
@@ -126,8 +130,8 @@ def multi_step_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
         agent.init_outbox()
 
     action_list = []
-    all_stats = SimulationStats.SimulationStats(NUM_FACTS, \
-                                                NUM_NOISE,\
+    all_stats = SimulationStats.SimulationStats(NUM_FPRO + NUM_FCON, \
+                                                NUM_NPRO + NUM_NCON, \
                                                 num_cc, \
                                                 size_lcc)
     for i in xrange(NUM_STEPS):
@@ -139,20 +143,25 @@ def multi_step_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
     return all_stats
 
 
-def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
-                   AGENT_PER_FACT, CONNECTION_PROBABILITY, \
-                   NUM_STEPS,  WILLINGNESS, COMPETENCE, NUM_TRIAL,\
+def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
+                   NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
+                   NUM_STEPS,  WILLINGNESS, COMPETENCE, \
+                   ENGAGEMENT, UNCERTAINTY_HANDLING, NUM_TRIAL,\
                    GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
                    TRUST_FILTER_ON=True):
-    all_stats = multi_step_simulation(NUM_FACTS,\
-                                      NUM_NOISE, \
+    all_stats = multi_step_simulation(NUM_FPRO, \
+                                      NUM_FCON, \
+                                      NUM_NPRO, \
+                                      NUM_NCON, \
+                                      NUM_GROUPS, \
                                       NUM_AGENTS, \
                                       AGENT_PER_FACT,\
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
-                                      COMPETENCE, GRAPH_TYPE,\
+                                      COMPETENCE, ENGAGEMENT, \
+                                      UNCERTAINTY_HANDLING, GRAPH_TYPE,\
                                       AGENT_SETUP, \
                                       SPAMMINESS, SELFISHNESS, \
                                       TRUST_USED, \
@@ -160,12 +169,14 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
                                       TRUST_FILTER_ON )
 
     for i in xrange(1, NUM_TRIAL):
-        new_stats = multi_step_simulation(NUM_FACTS, NUM_NOISE, \
-                                          NUM_AGENTS, \
+        new_stats = multi_step_simulation(NUM_FPRO, NUM_FCON, \
+                                          NUM_NPRO, NUM_NCON, \
+                                          NUM_GROUPS, NUM_AGENTS, \
                                           AGENT_PER_FACT, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
-                                          COMPETENCE, GRAPH_TYPE, \
+                                          COMPETENCE, ENGAGEMENT, \
+                                          UNCERTAINTY_HANDLING, GRAPH_TYPE, \
                                           AGENT_SETUP, \
                                           SPAMMINESS, SELFISHNESS, \
                                           TRUST_USED, \
@@ -176,14 +187,19 @@ def run_simulation(NUM_FACTS, NUM_NOISE, NUM_AGENTS, \
     summary_results = all_stats.process_sa()
 
     results = {}
-    results['setup'] = {'num_facts':NUM_FACTS, \
-                        'num_noise': NUM_NOISE,\
+    results['setup'] = {'num_pro_facts':NUM_FPRO, \
+                        'num_con_facts':NUM_FCON, \
+                        'num_pro_noise':NUM_NPRO, \
+                        'num_con_noise':NUM_NCON,\
+                        'num_groups':NUM_GROUPS,\
                         'num_agents':NUM_AGENTS, \
                         'agent_per_fact':AGENT_PER_FACT, \
                         'connection_probability_or_radius': CONNECTION_PROBABILITY, \
                         'num_steps': NUM_STEPS,\
                         'willingness': WILLINGNESS,\
                         'competence': COMPETENCE,\
+                        'engagement': ENGAGEMENT,\
+                        'uncertainty_handling': UNCERTAINTY_HANDLING,\
                         'spamminess': SPAMMINESS, \
                         'selfishness': SELFISHNESS, \
                         'trust_used': TRUST_USED,\
@@ -231,11 +247,12 @@ if __name__ == '__main__':
         w = 0.5 + 0.5*i
         for j in xrange(2):
             c = 0.5 + 0.5*j
+            e = u = 1
             results = run_simulation(NUM_FACTS, \
                                          NUM_NOISE, NUM_AGENTS, \
                                          AGENT_PER_FACT,\
                                          CONNECTION_PROBABILITY, \
-                                         NUM_STEPS, w, c, NUM_TRIAL, \
+                                         NUM_STEPS, w, c, e, u, NUM_TRIAL, \
                                          GRAPH_TYPE, \
                                          AGENT_SETUP=[{ "ratio" : 0.2,\
                                                             "spammer" : 0.8, \

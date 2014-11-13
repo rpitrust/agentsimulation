@@ -1,0 +1,24 @@
+{
+   "num_steps": 10000,
+   "num_trials": 100,
+   "trust_used": false,
+   "inbox_trust_sorted": false,
+   "num_fpro": [30],
+   "num_fcon": [20],
+   "num_npro": [10],
+   "num_ncon": [40],
+   "num_groups": [5],
+   "num_agents": [10],
+   "agent_per_fact": [2],
+   "graph_description": [{
+                            "type": "directed_random",
+                            "radius": 0.5
+                        }],
+   "agent_setup": [{}],
+   "willingness": [1],
+   "competence": [1],
+   "spamminess": [0.5],
+   "selfishness": [0],
+   "engagement": [1],
+   "uncertainty_handling": [0]
+}
