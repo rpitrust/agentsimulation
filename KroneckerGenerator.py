@@ -85,3 +85,7 @@ def generateStochasticKron(initMat, k, deleteSelfLoopsForStats=False, directed=F
         finalGraph = deleteSelfLoops(finalGraph, nNodes)
     finalGraph = convert(finalGraph)
     return finalGraph
+        
+
+        
+        
