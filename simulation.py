@@ -10,26 +10,8 @@ from simutil import *
 ########## Initialization code
 
 def create_connectivity(agents, p, type='undirected_random'):
-    if type == 'directed_random':
-        conn = gg.random_undirected_graph(agents, p)
-    elif type == 'spatial_random':
-        conn = gg.spatial_random_graph(agents, p)
-    elif type == 'hierarchy':
-        conn = gg.hierarchy_graph(agents)
-        for agent in agents[1:]:
-            agent.uses_knowledge = False
-        if p==1: ##team leaders can do filtering
-            for agent in agents[1:5]:
-                agent.uses_knowledge = True
-    elif type == 'collaborative':
-        conn = gg.collaborative_graph(agents)
-        for agent in agents[1:]:
-            agent.uses_knowledge = False
-        if p==1: ##team leaders can do filtering
-            for agent in agents[1:5]:
-                agent.uses_knowledge = True
-    else:
-        conn = gg.random_directed_graph(agents, p)
+    properties = {'graph_type' : type, 'connection_probability' : p}
+    conn = gg.create_graph_type(agents, properties)[0]
         
     for agent1 in conn.nodes():
         agent1.connect_to(conn.neighbors(agent1))
@@ -122,7 +104,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
         for j in xrange(AGENT_PER_FACT):
             ## find a random agent, and distribute fact i
             k = random.randint(0,NUM_AGENTS-1)
-            agents[k].add_fact(i)
+            agents[k].add_fact(i, i % (NUM_FPRO + NUM_FCON + NUM_NPRO + NUM_NCON) < (NUM_FPRO + NUM_FCON))
             
     ## Initialize agents to send everything that they think is valuable 
     ## in their outbox
@@ -217,6 +199,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
     results['all_sa0'] = all_stats.sa0
     results['all_comm0'] = all_stats.comm0
     results['steps'] = all_stats.steps
+    results['decisions'] = all_stats.decisions
+    results['correct_decisions'] = all_stats.correct_decisions
 
     return (results)
     

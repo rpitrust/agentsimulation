@@ -53,12 +53,12 @@ from simutil import *
 
 class Agent(object):
 
-    def __init__ (self, w=1, c=1, u=1, e=1, \
+    def __init__ (self, w=1, c=1, e=1, u=1, \
                   numfpro = 0, numfcon=0, numnpro = 0, numncon = 0, \
                   numgroups = 0, \
                   spammer=0, selfish=0,  \
                   trust_used = True, inbox_trust_sorted = True, \
-                  trust_filter_on = True, capacity = 20, uses_knowledge=True):
+                  trust_filter_on = True, capacity = 7, uses_knowledge=True):
         ## General constants used in simulation
         self.NUM_FPRO = numfpro
         self.NUM_FCON = numfcon
@@ -92,6 +92,7 @@ class Agent(object):
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
         self.knowledge = set([]) ## id of all facts known, spam or valuable
+        self.facts_known = set([])
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -103,8 +104,10 @@ class Agent(object):
         self.num_filtered = 0
 
         self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
-        self.deadline = 5000
+        self.deadline = self.uncertainty_handling
         self.facts_seen = []
+        self.decisions = 0
+        self.correct_decisions = 0
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -116,6 +119,7 @@ class Agent(object):
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
         self.knowledge = set([]) ## id of all facts known, spam or valuable
+        self.facts_known = set([]) ## id of all valuable facts known
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -126,8 +130,10 @@ class Agent(object):
         self.num_filtered = 0
 
         self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
-        self.deadline = 5000
+        self.deadline = self.uncertainty_handling
         self.facts_seen = []
+        self.decisions = 0
+        self.correct_decisions = 0
         
     def get_trust_for_neighbors( self ):
         line = ""
@@ -135,9 +141,11 @@ class Agent(object):
             line += "%d/%r " %(self.trust[n].trust, self.trust[n].is_trusted)
         return line
 
-    def add_fact(self, fact):
+    def add_fact(self, fact, is_good):
         """ Add fact to knowledge. """
         self.knowledge.add(fact)
+        if is_good:
+            self.facts_known.add(fact)
 
     def connect_to(self, neighbors, \
                    prior_comp = ('M','M'), \
@@ -203,7 +211,7 @@ class Agent(object):
         
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
-        self.add_fact(fact)
+        self.add_fact(fact, is_good)
         if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
             is_good = not is_good
@@ -222,10 +230,6 @@ class Agent(object):
         if(self.group_knowledge[fact_group][3] == -1):
             self.group_knowledge[fact_group][3] = self.time_spent + self.deadline
             
-        # Check to see if it's time to make a decision
-        if(self.group_knowledge[fact_group][3] <= self.time_spent):
-            self.group_knowledge[fact_group][2] = (self.group_knowledge[fact_group][0] >= self.group_knowledge[fact_group][1])
-
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
             if sender_neighbor: ## there is a sender for the fact
@@ -293,6 +297,14 @@ class Agent(object):
                            to_send.append( (1, fact, to_send_tmp[i]) )
 
                self.outbox.extend( to_send )
+               
+    def make_decisions(self):
+        """ See if there are any decisions to be made """
+        for i in range(len(self.group_knowledge)):
+            if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][2] == -1 ):
+                self.group_knowledge[i][2] = (self.group_knowledge[i][0] >= self.group_knowledge[i][1])
+                self.decisions += 1
+                self.correct_decisions += self.group_knowledge[i][2]
             
     def init_outbox(self):
         """ Add all initial knowledge as a fact to send out. """
@@ -313,6 +325,7 @@ class Agent(object):
         debug = True
         self.time_spent += 1 ## simulation time incremented
         actions_taken = []
+        self.make_decisions()
         ### By willingness probability, decide whether to act or not
         if random.random() <= self.willingness:
             ## Agent decided to act
@@ -330,9 +343,10 @@ class Agent(object):
                    actions_taken.append((n, fact))
             elif len(self.inbox) != 0: # decision is inbox
                 ### Process the first set of facts, drop the rest
-                num_actions = min(len(self.inbox), ceil(self.capacity * self.engagement))
-                for j in xrange(int(num_actions)):
-                    (fact, neighbor) = self.inbox.pop() ## Twitter model
+                num_actions = min(len(self.inbox), int(ceil(self.capacity * self.engagement)))
+                emails = random.sample(self.inbox, num_actions) ## So you don't always prioritize neighbors the same way
+                for email in emails: ## Process each email of the inbox's subset
+                    (fact, neighbor) = email
                     self.process_fact(fact, neighbor)
                 self.inbox = []
         return actions_taken  ## No send action was taken
