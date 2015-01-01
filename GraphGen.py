@@ -35,6 +35,7 @@ def get_graph(objects, properties):
         else: ##Star by default
             x = nx.star_graph(len(objects)-1)
         tries += 1
+        x = x.to_undirected()
         cc_conn = nx.connected_components(x)
         if len(cc_conn) == 1 or tries > 5: 
             ##best effort to create a connected graph!

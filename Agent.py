@@ -48,23 +48,31 @@ Class for generating and implementing Agents.
 
 import random 
 import Trust
+from math import ceil
 from simutil import *
 
 class Agent(object):
 
-    def __init__ (self, w=1, c=1, numfacts = 0, numnoise=0, \
+    def __init__ (self, w=1, c=1, e=1, u=1, \
+                  numfpro = 0, numfcon=0, numnpro = 0, numncon = 0, \
+                  numgroups = 0, \
                   spammer=0, selfish=0,  \
                   trust_used = True, inbox_trust_sorted = True, \
-                  trust_filter_on = True, capacity = 1, uses_knowledge=True):
+                  trust_filter_on = True, capacity = 7, uses_knowledge=True):
         ## General constants used in simulation
-        self.NUM_FACTS = numfacts
-        self.NUM_NOISE = numnoise
+        self.NUM_FPRO = numfpro
+        self.NUM_FCON = numfcon
+        self.NUM_NPRO = numnpro
+        self.NUM_NCON = numncon
+        self.FACT_PER_GROUP = numfpro + numfcon + numnpro + numncon
 
         ## Agent properties
         self.trust_used = trust_used
         self.inbox_trust_sorted = inbox_trust_sorted
         self.willingness = w
         self.competence = c
+        self.engagement = e
+        self.uncertainty_handling = u
         self.selfish = selfish
         self.spammer = spammer
         self.capacity = capacity
@@ -84,6 +92,7 @@ class Agent(object):
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
         self.knowledge = set([]) ## id of all facts known, spam or valuable
+        self.facts_known = set([])
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -93,6 +102,12 @@ class Agent(object):
         self.trust = {}  ## Key: neighbor, Value: Trust object
         self.neighbor_spamminess = {}
         self.num_filtered = 0
+
+        self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
+        self.deadline = self.uncertainty_handling
+        self.facts_seen = []
+        self.decisions = 0
+        self.correct_decisions = 0
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -104,6 +119,7 @@ class Agent(object):
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
         self.knowledge = set([]) ## id of all facts known, spam or valuable
+        self.facts_known = set([]) ## id of all valuable facts known
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -113,15 +129,23 @@ class Agent(object):
         self.neighbor_spamminess = {}
         self.num_filtered = 0
 
+        self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
+        self.deadline = self.uncertainty_handling
+        self.facts_seen = []
+        self.decisions = 0
+        self.correct_decisions = 0
+        
     def get_trust_for_neighbors( self ):
         line = ""
         for n in self.neighbors:
             line += "%d/%r " %(self.trust[n].trust, self.trust[n].is_trusted)
         return line
 
-    def add_fact(self, fact):
+    def add_fact(self, fact, is_good):
         """ Add fact to knowledge. """
         self.knowledge.add(fact)
+        if is_good:
+            self.facts_known.add(fact)
 
     def connect_to(self, neighbors, \
                    prior_comp = ('M','M'), \
@@ -165,23 +189,47 @@ class Agent(object):
         if not (self.uses_knowledge): 
         ##always think everything is valuable, used for hierarchies
             return True
-        if (0 <= fact < self.NUM_FACTS):
+        if (fact % (self.FACT_PER_GROUP) < (self.NUM_FPRO + self.NUM_FCON)):
             return True
-        elif (self.NUM_FACTS <= fact < (self.NUM_FACTS + self.NUM_NOISE)):
-            return False
         else:
-            return None  ## Invalid fact.
+            return False
+            
+    def is_fact_pro(self,fact):
+        """ Return the ground truth of whether the fact is
+        a pro or con. """
+        if (fact % (self.FACT_PER_GROUP) < self.NUM_FPRO):
+            return True   ## Is valuable and pro
+        elif (fact % (self.FACT_PER_GROUP) < (self.NUM_FPRO + self.NUM_FCON)):
+            return False  ## Is valuable and con
+        elif (fact % (self.FACT_PER_GROUP) < (self.FACT_PER_GROUP - self.NUM_NCON)):
+            return True   ## Is noise and pro
+        else:
+            return False  ## Is noise and con
 
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
         
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
-        self.add_fact(fact)
+        self.add_fact(fact, is_good)
         if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
             is_good = not is_good
-
+            
+        is_pro = self.is_fact_pro(fact)
+        fact_group = fact / self.FACT_PER_GROUP
+        
+            
+        # Increment signal or noise for the group's bin
+        if is_good and is_pro:
+            self.group_knowledge[fact_group][0] += 1
+        elif is_good:
+            self.group_knowledge[fact_group][1] += 1
+            
+        # If this is a new group, create deadline
+        if(self.group_knowledge[fact_group][3] == -1):
+            self.group_knowledge[fact_group][3] = self.time_spent + self.deadline
+            
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
             if sender_neighbor: ## there is a sender for the fact
@@ -193,61 +241,71 @@ class Agent(object):
                     self.all_received_facts.add((fact, sender_neighbor))
                 if len(self.last_received_facts) > self.trust_update_frequency:
                     self.process_trust()
+                    
 
         ## Decide who to send the fact to based on spamminess and selfishness
         if is_good:
-            if self.spammer > 0:
-                ## x% spammer person will send the same fact to x% of contacts.
-                already_sent_tmp = list(self.history.get(fact,set()))
-                template = range(len(already_sent_tmp))
-                random.shuffle(template)
-                idx = int(len(template) * (1-self.spammer))
-                already_sent  = []
-                for i in template[:idx]:
-                    already_sent.append( already_sent_tmp[ template[i]] )
-                already_sent = set(already_sent)
-            else:
-                already_sent = self.history.get(fact,set())
+            if(self.group_knowledge[fact_group][2] == -1 or self.group_knowledge[fact_group][2] == is_pro):
+               if self.spammer > 0:
+                   ## x% spammer person will send the same fact to x% of contacts.
+                   already_sent_tmp = list(self.history.get(fact,set()))
+                   template = range(len(already_sent_tmp))
+                   random.shuffle(template)
+                   idx = int(len(template) * (1-self.spammer))
+                   already_sent  = []
+                   for i in template[:idx]:
+                       already_sent.append( already_sent_tmp[ template[i]] )
+                   already_sent = set(already_sent)
+               else:
+                   already_sent = self.history.get(fact,set())
 
-            to_send = []
-            to_send_tmp = self.neighbors - already_sent
-            to_send_tmp = list(to_send_tmp)
+               to_send = []
+               to_send_tmp = self.neighbors - already_sent
+               to_send_tmp = list(to_send_tmp)
 
-            template = []
+               template = []
 
-            ##selfishness code
-            if self.trust_used: ##construct template based on trust
-                ## and exclude people if trust filter is on
-                for i in range(len(to_send_tmp)):
-                    n = to_send_tmp[i]
-                    if self.trust_filter_on: ##only included trusted people
-                        if self.trust[n].is_trusted:
-                            template.append( (self.trust[n].trust, i) )
-                        else:
-                            self.num_filtered += 1
-                    else:
-                        template.append( (self.trust[n].trust, i) )
-                ## choose the least trusted people from to_send_tmp to exclude
-                template.sort()
-                idx = int(len(template) * (1-self.selfish))
-                
-                ## find the items to send, sort by trust if trust is used
-                for (t,i) in template[:idx]:
-                    to_send.append( (t, fact, to_send_tmp[i]) )
-                to_send.sort(reverse = True)
-            else:  ## no trust used
-                if self.selfish > 0:
-                    for i in range(len(to_send_tmp)):
-                        n = to_send_tmp[i]
-                        if random.random() <= (1-self.selfish):
-                            to_send.append( (1, fact, to_send_tmp[i]) )
-                else:
-                    for i in range(len(to_send_tmp)):
-                        n = to_send_tmp[i]
-                        to_send.append( (1, fact, to_send_tmp[i]) )
+               ##selfishness code
+               if self.trust_used: ##construct template based on trust
+                   ## and exclude people if trust filter is on
+                   for i in range(len(to_send_tmp)):
+                       n = to_send_tmp[i]
+                       if self.trust_filter_on: ##only included trusted people
+                           if self.trust[n].is_trusted:
+                               template.append( (self.trust[n].trust, i) )
+                           else:
+                               self.num_filtered += 1
+                       else:
+                           template.append( (self.trust[n].trust, i) )
+                   ## choose the least trusted people from to_send_tmp to exclude
+                   template.sort()
+                   idx = int(len(template) * (1-self.selfish))
+                   
+                   ## find the items to send, sort by trust if trust is used
+                   for (t,i) in template[:idx]:
+                       to_send.append( (t, fact, to_send_tmp[i]) )
+                   to_send.sort(reverse = True)
+               else:  ## no trust used
+                   if self.selfish > 0:
+                       for i in range(len(to_send_tmp)):
+                           n = to_send_tmp[i]
+                           if random.random() <= (1-self.selfish):
+                               to_send.append( (1, fact, to_send_tmp[i]) )
+                   else:
+                       for i in range(len(to_send_tmp)):
+                           n = to_send_tmp[i]
+                           to_send.append( (1, fact, to_send_tmp[i]) )
 
-            self.outbox.extend( to_send )
-
+               self.outbox.extend( to_send )
+               
+    def make_decisions(self):
+        """ See if there are any decisions to be made """
+        for i in range(len(self.group_knowledge)):
+            if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][3] > -1 and self.group_knowledge[i][2] == -1 ): #Make decision if the deadline has passed, if a fact has been seen, and a decision hasn't already been made
+                self.group_knowledge[i][2] = (self.group_knowledge[i][0] >= self.group_knowledge[i][1])
+                self.decisions += 1
+                self.correct_decisions += self.group_knowledge[i][2]
+            
     def init_outbox(self):
         """ Add all initial knowledge as a fact to send out. """
         for fact in self.knowledge:
@@ -267,25 +325,30 @@ class Agent(object):
         debug = True
         self.time_spent += 1 ## simulation time incremented
         actions_taken = []
-        for i in xrange(self.capacity):
-            ### By willingness probability, decide whether to act or not
-            if random.random() <= self.willingness:
-                ## Agent decided to act
-                decision = self.decide_action()
-                if decision == 'outbox':
-                    ### Take the first action from the outbox
-                    self.numsent += 1
-                    (trust, fact, n) =  self.outbox.pop(0)
-                    if fact in self.sentfacts:
-                        self.history[fact].add(n)
-                    else:
-                        self.history[fact] = set([n])
-                    self.sentfacts.add(fact)
-                    actions_taken.append((n, fact))
-                elif len(self.inbox) != 0: # decision is inbox
-                    ### Process the first fact in the inbox and queue to outbox 
-                    (fact, neighbor) = self.inbox.pop(0)
+        self.make_decisions()
+        ### By willingness probability, decide whether to act or not
+        if random.random() <= self.willingness:
+            ## Agent decided to act
+            decision = self.decide_action()
+            if decision == 'outbox':
+                ### Send entire outbox
+                for j in xrange(len(self.outbox)):
+                   self.numsent += 1
+                   (trust, fact, n) =  self.outbox.pop(0)
+                   if fact in self.sentfacts:
+                       self.history[fact].add(n)
+                   else:
+                       self.history[fact] = set([n])
+                   self.sentfacts.add(fact)
+                   actions_taken.append((n, fact))
+            elif len(self.inbox) != 0: # decision is inbox
+                ### Process the first set of facts, drop the rest
+                num_actions = min(len(self.inbox), int(ceil(self.capacity * self.engagement)))
+                emails = random.sample(self.inbox, num_actions) ## So you don't always prioritize neighbors the same way
+                for email in emails: ## Process each email of the inbox's subset
+                    (fact, neighbor) = email
                     self.process_fact(fact, neighbor)
+                self.inbox = []
         return actions_taken  ## No send action was taken
 
     def decide_action(self) :

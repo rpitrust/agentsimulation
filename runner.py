@@ -47,45 +47,53 @@ def run(config_file, output_loc, is_slave, identity):
 
     i = 1
 
-    for num_fact in config['num_facts']:
-        for num_noise in config['num_noise']:
-            for num_agents in config['num_agents']:
-                for agent_per_fact in config['agent_per_fact']:
-                    for graph in config['graph_description']:
-                        graph_type = graph['type']
-                        radius = graph['radius']
-                        for agent_setup in config['agent_setup']:
-                            for w in config['willingness']:
-                                for c in config['competence']:
-                                    for spam in config['spamminess']:
-                                        for selfish in config['selfishness']:
-    
-                                            print "Case", i, "being executed"
-                                            print "running for %d/%d facts %d agents"\
-                                                %(num_fact, num_noise, num_agents)
-                                            print "\t%d facts per agent "\
-                                                %agent_per_fact
-                                            print "\t%s/%.1f graph for %s steps" \
-                                                %(graph_type, radius, num_steps)
-                                            print "\tw:%.1f/c:%.1f for %d trials"\
-                                                %(w,c,num_trials)
-                                            print "\tagent setup", agent_setup
-                                            i += 1
-                                            results = sim.run_simulation(num_fact, \
-                                                                         num_noise,\
-                                                                         num_agents, \
-                                                                         agent_per_fact,\
-                                                                         radius, \
-                                                                         num_steps, \
-                                                                         w, c, \
-                                                                         num_trials, \
-                                                                         graph_type,\
-                                                                         agent_setup,\
-                                                                         spam, selfish,\
-                                                                         trust_used,\
-                                                                         inbox_trust_sorted, \
-                                                                         trust_filter_on)
-                                            output(output_loc, is_slave, identity, sj.dumps(results) + '\n' )
+    for num_fpro in config['num_fpro']:
+       for num_fcon in config['num_fcon']:
+           for num_npro in config['num_npro']:
+              for num_ncon in config['num_ncon']:
+                  for num_groups in config['num_groups']:
+                     for num_agents in config['num_agents']:
+                         for agent_per_fact in config['agent_per_fact']:
+                             for graph in config['graph_description']:
+                                 graph_type = graph['type']
+                                 radius = graph['radius']
+                                 for agent_setup in config['agent_setup']:
+                                     for w in config['willingness']:
+                                         for c in config['competence']:
+                                             for spam in config['spamminess']:
+                                                 for selfish in config['selfishness']:
+                                                    for e in config['engagement']:
+                                                       for u in config ['uncertainty_handling']:
+             
+                                                           print "Case", i, "being executed"
+                                                           print "running for %d/%d facts per group %d groups %d agents"\
+                                                               %(num_fpro+num_fcon, num_npro+num_ncon, num_groups, num_agents)
+                                                           print "\t%d agents per fact "\
+                                                               %agent_per_fact
+                                                           print "\t%s/%.1f graph for %s steps" \
+                                                               %(graph_type, radius, num_steps)
+                                                           print "\tw:%.1f/c:%.1f/e:%.1f/u:%.1f for %d trials"\
+                                                               %(w,c,e,u,num_trials)
+                                                           print "\tagent setup", agent_setup
+                                                           i += 1
+                                                           results = sim.run_simulation(num_fpro, \
+                                                                                        num_fcon, \
+                                                                                        num_npro,\
+                                                                                        num_ncon, \
+                                                                                        num_groups, \
+                                                                                        num_agents, \
+                                                                                        agent_per_fact,\
+                                                                                        radius, \
+                                                                                        num_steps, \
+                                                                                        w, c, e, u, \
+                                                                                        num_trials, \
+                                                                                        graph_type,\
+                                                                                        agent_setup,\
+                                                                                        spam, selfish,\
+                                                                                        trust_used,\
+                                                                                        inbox_trust_sorted, \
+                                                                                        trust_filter_on)
+                                                           output(output_loc, is_slave, identity, sj.dumps(results) + '\n' )
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
