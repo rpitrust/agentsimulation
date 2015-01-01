@@ -119,7 +119,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
     for i in xrange(NUM_STEPS):
         x = one_step_simulation(agents)
         action_list.append(x)
-        if i%100 == 0:
+        if i%5 == 0:
             all_stats.update_stats(agents,i)
 
     return all_stats

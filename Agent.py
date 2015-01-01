@@ -245,7 +245,7 @@ class Agent(object):
 
         ## Decide who to send the fact to based on spamminess and selfishness
         if is_good:
-            if(self.group_knowledge[fact_group][2] == -1 or self.group_knowledge[fact_group][3] == is_pro):
+            if(self.group_knowledge[fact_group][2] == -1 or self.group_knowledge[fact_group][2] == is_pro):
                if self.spammer > 0:
                    ## x% spammer person will send the same fact to x% of contacts.
                    already_sent_tmp = list(self.history.get(fact,set()))
@@ -301,7 +301,7 @@ class Agent(object):
     def make_decisions(self):
         """ See if there are any decisions to be made """
         for i in range(len(self.group_knowledge)):
-            if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][2] == -1 ):
+            if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][3] > -1 and self.group_knowledge[i][2] == -1 ): #Make decision if the deadline has passed, if a fact has been seen, and a decision hasn't already been made
                 self.group_knowledge[i][2] = (self.group_knowledge[i][0] >= self.group_knowledge[i][1])
                 self.decisions += 1
                 self.correct_decisions += self.group_knowledge[i][2]
