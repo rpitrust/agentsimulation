@@ -14,8 +14,6 @@ class SimulationStats(object):
             self.comm = [] ## list of total communication values 
                            ## over all agents for each at time step
             self.comm0 = [] ## list of communication values for agent at 0
-            self.decisions = [] ##  number decisions made of all agents
-            self.correct_decisions = [] ##  number correct decisions of all agents
             self.steps = [] ## steps at which all other stats are recorded.
             self.total_filtered = 0
             self.num_cc = num_cc
@@ -38,8 +36,6 @@ class SimulationStats(object):
                 self.total_filtered += other.total_filtered
                 self.num_cc += other.num_cc
                 self.size_lcc += other.size_lcc
-                self.decisions[i] += other.decisions[i]
-                self.correct_decisions[i] += other.correct_decisions[i]
             self.num_appended += 1
 
         def normalize( self ):
@@ -47,8 +43,6 @@ class SimulationStats(object):
                 self.sa[i][0] /= self.num_appended
                 self.sa[i][1] /= self.num_appended
                 self.sa[i][2] /= self.num_appended
-                self.decisions[i] /= self.num_appended
-                self.correct_decisions[i] /= self.num_appended
                 self.sa0[i] /= self.num_appended
                 self.comm[i] /= self.num_appended
                 self.comm0[i] /= self.num_appended
@@ -58,7 +52,17 @@ class SimulationStats(object):
             self.num_appended = 1.0
 
         def num_good_facts(self, agent):
-            return len(agent.facts_known)
+            x = list( agent.knowledge )
+            x.sort()
+            last_fact = -1
+            for i in x:
+                if i > self.NUM_FACTS:
+                    last_fact = i
+                    break
+            if last_fact == -1:
+                return len(x)
+            else:
+                return x.index(last_fact)-1
         
         def find_sa(self, agents):
             cur_sa = []
@@ -73,24 +77,11 @@ class SimulationStats(object):
                 val += agent.numsent
                 filtered += agent.num_filtered
             return (val, filtered)
-            
-        def find_decisions(self, agents):
-            decisions = 0
-            correct_decisions = 0
-            for agent in agents:
-                if agent.decisions > 5:
-                   print "foobar"
-                decisions += agent.decisions
-                correct_decisions += agent.correct_decisions
-            return (decisions, correct_decisions)
 
         def update_stats(self, agents, steps):
             (maxsa, (m,s)) = self.find_sa(agents)
             self.sa0.append( self.num_good_facts(agents[0]) )
             self.sa.append ( [m,s, maxsa] )
-            (d, c) = self.find_decisions(agents)
-            self.decisions.append(d)
-            self.correct_decisions.append(c)
             (c,f) = self.full_comms(agents)
             self.comm.append(c)
             self.comm0.append( agents[0].numsent )
@@ -122,8 +113,6 @@ class SimulationStats(object):
                     sa_at_value.append (
                         {'sa': next_sa_to_search/self.NUM_FACTS,\
                          'comm': self.comm[i],\
-                         'decisions': self.decisions[i],\
-                         'correct_decisions': self.correct_decisions[i],\
                          'steps': self.steps[i]})
                     next_sa_to_search += self.sa_increment
 
