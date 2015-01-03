@@ -109,12 +109,13 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
         for j in xrange(AGENT_PER_FACT):
             ## find a random agent, and distribute fact i
             k = random.randint(0,NUM_AGENTS-1)
-            agents[k].add_fact(i, i % (NUM_FPRO + NUM_FCON + NUM_NPRO + NUM_NCON) < (NUM_FPRO + NUM_FCON))
+            agents[k].receive(i, None )
+            #agents[k].add_fact(i, i % (NUM_FPRO + NUM_FCON + NUM_NPRO + NUM_NCON) < (NUM_FPRO + NUM_FCON))
             
     ## Initialize agents to send everything that they think is valuable 
     ## in their outbox
-    for agent in agents:
-        agent.init_outbox()
+    ##for agent in agents:
+    ##    agent.init_outbox()
 
     action_list = []
     all_stats = SimulationStats.SimulationStats((NUM_FPRO + NUM_FCON) * NUM_GROUPS, \

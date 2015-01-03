@@ -268,7 +268,9 @@ class Agent(object):
         
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
-        self.add_fact(fact, is_good)
+        seen = fact in self.knowledge
+        if not seen:
+            self.add_fact(fact, is_good)
         if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
             is_good = not is_good
@@ -278,15 +280,18 @@ class Agent(object):
         
             
         # Increment signal or noise for the group's bin
-        if is_good and is_pro:
-            self.group_knowledge[fact_group][0] += 1
-        elif is_good:
-            self.group_knowledge[fact_group][1] += 1
+        if not seen:
+            if is_good and is_pro:
+                self.group_knowledge[fact_group][0] += 1
+            elif is_good:
+                self.group_knowledge[fact_group][1] += 1
             
         # If this is a new group, create deadline
         if(self.group_knowledge[fact_group][3] == -1):
-            self.group_knowledge[fact_group][3] = self.time_spent + self.deadline
-            
+            self.group_knowledge[fact_group][3] = self.deadline 
+            ## this makes the deadline relative
+            ##self.group_knowledge[fact_group][3] += self.time_spent
+           
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
             if sender_neighbor: ## there is a sender for the fact
@@ -308,7 +313,7 @@ class Agent(object):
         """ See if there are any decisions to be made """
         for i in range(len(self.group_knowledge)):
             if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][3] > -1 and self.group_knowledge[i][2] == -1 ): #Make decision if the deadline has passed, if a fact has been seen, and a decision hasn't already been made
-                self.group_knowledge[i][2] = (self.group_knowledge[i][0] >= self.group_knowledge[i][1])
+                self.group_knowledge[i][2] = (self.group_knowledge[i][0] > self.group_knowledge[i][1])
                 self.decisions += 1
                 self.correct_decisions += self.group_knowledge[i][2]
             
