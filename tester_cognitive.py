@@ -1,7 +1,7 @@
 import Cognitivesimulation as sim
 import json 
 import sys
-
+import time
 
 num_fpro = 50
 num_fcon = 20
@@ -26,7 +26,7 @@ trust_used = False
 inbox_trust_sorted = False
 trust_filter_on  = False
 
-
+start = time.time()
 results = sim.run_simulation(num_fpro, \
                              num_fcon, \
                              num_npro,\
@@ -46,6 +46,8 @@ results = sim.run_simulation(num_fpro, \
                              inbox_trust_sorted, \
                              trust_filter_on)
 
+end = time.time()
+
 for val in results['summary_results']['sa_at_value']:
     print "%d%% (%.2f/%.2f), sa: %.2f, comm: %d, steps: %d" \
         %(100*val['correct_decisions']/float(1+val['decisions']), \
@@ -54,3 +56,5 @@ for val in results['summary_results']['sa_at_value']:
           val['sa'], \
           val['comm'],\
           val['steps'])
+
+print "Time elapsed", end-start
