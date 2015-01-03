@@ -1,8 +1,8 @@
 
 import random 
-import CognitiveAgent 
+import CognitiveAgent as Agent
 import CognitiveGraphGen as gg
-import CognitiveSimulationStats
+import CognitiveSimulationStats as SimulationStats
 import networkx as nx
 from simutil import * 
 
@@ -57,18 +57,21 @@ def change_agent_property(agents, setup):
 
 def one_step_simulation(agents):
     num_actions = 0
-    actions_taken = []
+    all_actions = []
     for agent in agents:
         actions_taken = agent.act()  ##list of (n, fact)
-        for (n,fact) in actions_taken:
-            num_actions += 1
-            n.receive(fact, agent)
+        all_actions.extend(actions_taken)
+
+    random.shuffle(all_actions)
+    for (n,fact) in all_actions:
+        num_actions += 1
+        n.receive(fact, agent)
     return num_actions
 
 
 def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                           NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
-                          NUM_STEPS, WILLINGNESS, COMPETENCE, \
+                          NUM_STEPS, WILLINGNESS, COMPETENCE, CAPACITY, \
                           ENGAGEMENT, UNCERTAINTY_HANDLING, \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
@@ -76,12 +79,14 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                           TRUST_FILTER_ON=True):
     
     facts = range((NUM_FPRO + NUM_FCON + NUM_NPRO + NUM_NCON)*NUM_GROUPS)
+    random.shuffle(facts)
     ##print "Created", len(facts), "facts"
 
     agents = []
     for i in xrange(NUM_AGENTS):
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
                                     ENGAGEMENT, UNCERTAINTY_HANDLING, \
+                                    CAPACITY, \
                                     NUM_FPRO, NUM_FCON,\
                                     NUM_NPRO, NUM_NCON, \
                                     NUM_GROUPS, \
@@ -112,8 +117,8 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
         agent.init_outbox()
 
     action_list = []
-    all_stats = SimulationStats.SimulationStats(NUM_FPRO + NUM_FCON, \
-                                                NUM_NPRO + NUM_NCON, \
+    all_stats = SimulationStats.SimulationStats((NUM_FPRO + NUM_FCON) * NUM_GROUPS, \
+                                                (NUM_NPRO + NUM_NCON) * NUM_GROUPS, \
                                                 num_cc, \
                                                 size_lcc)
     for i in xrange(NUM_STEPS):
@@ -128,8 +133,8 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
 def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                    NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                    NUM_STEPS,  WILLINGNESS, COMPETENCE, \
-                   ENGAGEMENT, UNCERTAINTY_HANDLING, NUM_TRIAL,\
-                   GRAPH_TYPE, AGENT_SETUP=[], \
+                   ENGAGEMENT, UNCERTAINTY_HANDLING, CAPACITY,\
+                   NUM_TRIAL, GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
                    TRUST_FILTER_ON=True):
@@ -142,7 +147,7 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                       AGENT_PER_FACT,\
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
-                                      COMPETENCE, ENGAGEMENT, \
+                                      COMPETENCE, CAPACITY, ENGAGEMENT, \
                                       UNCERTAINTY_HANDLING, GRAPH_TYPE,\
                                       AGENT_SETUP, \
                                       SPAMMINESS, SELFISHNESS, \
@@ -157,7 +162,7 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                           AGENT_PER_FACT, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
-                                          COMPETENCE, ENGAGEMENT, \
+                                          COMPETENCE, CAPACITY, ENGAGEMENT, \
                                           UNCERTAINTY_HANDLING, GRAPH_TYPE, \
                                           AGENT_SETUP, \
                                           SPAMMINESS, SELFISHNESS, \

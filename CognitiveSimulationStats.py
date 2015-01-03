@@ -78,8 +78,6 @@ class SimulationStats(object):
             decisions = 0
             correct_decisions = 0
             for agent in agents:
-                if agent.decisions > 5:
-                   print "foobar"
                 decisions += agent.decisions
                 correct_decisions += agent.correct_decisions
             return (decisions, correct_decisions)
