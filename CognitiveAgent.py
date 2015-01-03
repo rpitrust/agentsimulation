@@ -319,7 +319,7 @@ class Agent(object):
 
     def receive(self, fact, neighbor):
         """ Receive a fact from another neighbor. """
-        self.inbox.append((fact, neighbor))
+        self.inbox.insert(0,(fact, neighbor))
 
     def act(self):
         """ 
@@ -340,26 +340,28 @@ class Agent(object):
                 ### Send entire outbox
                 for j in xrange(len(self.outbox)):
                    self.numsent += 1
-                   (trust, fact, n) =  self.outbox.pop(0)
+                   (trust, fact, n) =  self.outbox[j]
                    if fact in self.sentfacts:
                        self.history[fact].add(n)
                    else:
                        self.history[fact] = set([n])
                    self.sentfacts.add(fact)
                    actions_taken.append((n, fact))
+                self.outbox = []
             elif len(self.inbox) != 0: # decision is inbox
+                eng_val = min(len(self.inbox), self.capacity*self.engagement)
+                max_val = min(len(self.inbox), self.capacity)
                 ### Process a number of facts determined by engagement
-                for i in xrange(0, min(len(self.inbox), self.engagement)):
+                for i in xrange(0, eng_val):
                     (fact, neighbor) = self.inbox[i]
                     self.process_fact(fact, neighbor)
                 
                 ### Send a number of facts determined by capacity
-                for i in xrange(min(len(self.inbox), self.engagement), min(len(self.inbox), self.capacity)):
-                    #SEND FACT
+                for i in xrange(eng_val, max_val): #SEND FACT
                     self.send_fact(fact)
 
                     ### Drop remaining facts
-                self.inbox = []
+                self.inbox = self.inbox[max_val:]
         return actions_taken  ## No send action was taken
 
     def decide_action(self) :
