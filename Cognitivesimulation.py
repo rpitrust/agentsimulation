@@ -42,6 +42,9 @@ def change_agent_property(agents, setup):
     if 'competence' in setup.keys():
         for i in xrange(cutoff):
             agents[who[i]].competence = setup['competence']
+    if 'engagement' in setup.keys():
+        for i in xrange(cutoff):
+            agents[who[i]].engagement = setup['engagement']
     if 'willingness' in setup.keys():
         for i in xrange(cutoff):
             agents[who[i]].willingness = setup['willingness']
@@ -73,6 +76,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                           NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                           NUM_STEPS, WILLINGNESS, COMPETENCE, CAPACITY, \
                           ENGAGEMENT, UNCERTAINTY_HANDLING, \
+                          CORRABORATION_THRESHOLD,  \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
                           TRUST_USED=True, INBOX_TRUST_SORTED=False, \
@@ -86,6 +90,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
     for i in xrange(NUM_AGENTS):
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
                                     ENGAGEMENT, UNCERTAINTY_HANDLING, \
+                                    CORRABORATION_THRESHOLD, \
                                     CAPACITY, \
                                     NUM_FPRO, NUM_FCON,\
                                     NUM_NPRO, NUM_NCON, \
@@ -128,13 +133,16 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
         if i%5 == 0:
             all_stats.update_stats(agents,i)
 
+
     return all_stats
 
 
 def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                    NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                    NUM_STEPS,  WILLINGNESS, COMPETENCE, \
-                   ENGAGEMENT, UNCERTAINTY_HANDLING, CAPACITY,\
+                   ENGAGEMENT, UNCERTAINTY_HANDLING, \
+                   CORRABORATION_THRESHOLD, \
+                   CAPACITY,\
                    NUM_TRIAL, GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
@@ -149,7 +157,9 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
                                       COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                      UNCERTAINTY_HANDLING, GRAPH_TYPE,\
+                                      UNCERTAINTY_HANDLING, \
+                                      CORRABORATION_THRESHOLD, \
+                                      GRAPH_TYPE,\
                                       AGENT_SETUP, \
                                       SPAMMINESS, SELFISHNESS, \
                                       TRUST_USED, \
@@ -164,7 +174,9 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
                                           COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                          UNCERTAINTY_HANDLING, GRAPH_TYPE, \
+                                          UNCERTAINTY_HANDLING, \
+                                          CORRABORATION_THRESHOLD, \
+                                          GRAPH_TYPE, \
                                           AGENT_SETUP, \
                                           SPAMMINESS, SELFISHNESS, \
                                           TRUST_USED, \
@@ -188,6 +200,7 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                         'competence': COMPETENCE,\
                         'engagement': ENGAGEMENT,\
                         'uncertainty_handling': UNCERTAINTY_HANDLING,\
+                        'corraboration_threshold': CORRABORATION_THRESHOLD,\
                         'spamminess': SPAMMINESS, \
                         'selfishness': SELFISHNESS, \
                         'trust_used': TRUST_USED,\
@@ -239,14 +252,16 @@ if __name__ == '__main__':
             c = 0.5 + 0.5*j
             e = u = 1
             results = run_simulation(NUM_FACTS, \
-                                         NUM_NOISE, NUM_AGENTS, \
-                                         AGENT_PER_FACT,\
-                                         CONNECTION_PROBABILITY, \
-                                         NUM_STEPS, w, c, e, u, NUM_TRIAL, \
-                                         GRAPH_TYPE, \
-                                         AGENT_SETUP=[{ "ratio" : 0.2,\
-                                                            "spammer" : 0.8, \
-                                                            "competence":0.2 }])
+                                     NUM_NOISE, NUM_AGENTS, \
+                                     AGENT_PER_FACT,\
+                                     CONNECTION_PROBABILITY, \
+                                     NUM_STEPS, w, c, e, u, \
+                                     4, \
+                                     NUM_TRIAL, \
+                                     GRAPH_TYPE, \
+                                     AGENT_SETUP=[{ "ratio" : 0.2,\
+                                                    "spammer" : 0.8, \
+                                                    "competence":0.2 }])
             
             ##print results
             print 'w, c, num_cc, size_lcc'

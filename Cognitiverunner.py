@@ -47,6 +47,8 @@ def run(config_file, output_loc, is_slave, identity):
 
     i = 1
 
+    corraboration_threshold = 4
+
     for num_fpro in config['num_fpro']:
        for num_fcon in config['num_fcon']:
            for num_npro in config['num_npro']:
@@ -87,6 +89,7 @@ def run(config_file, output_loc, is_slave, identity):
                                                                                            radius, \
                                                                                            num_steps, \
                                                                                            w, c, e, u, \
+                                                                                           corraboration_threshold, \
                                                                                            cap, \
                                                                                            num_trials, \
                                                                                            graph_type,\

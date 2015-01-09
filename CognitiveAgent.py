@@ -53,7 +53,8 @@ from simutil import *
 
 class Agent(object):
 
-    def __init__ (self, w=1, c=1, e=1, u=1, capacity=1,\
+    def __init__ (self, w=1, c=1, e=1, u=1, corraboration_threshold = 4, \
+                  capacity=1,\
                   numfpro = 0, numfcon=0, numnpro = 0, numncon = 0, \
                   numgroups = 0, \
                   spammer=0, selfish=0,  \
@@ -102,12 +103,19 @@ class Agent(object):
         self.trust = {}  ## Key: neighbor, Value: Trust object
         self.neighbor_spamminess = {}
         self.num_filtered = 0
-
-        self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
+        
+        ## Cognitive differences
         self.deadline = self.uncertainty_handling
-        self.facts_seen = []
+        self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
+        self.goodfacts_seen = set([])
         self.decisions = 0
         self.correct_decisions = 0
+
+        ## keeping track of how many times facts are seen
+        self.seen_facts = {}  ##keys: fact, is_good, is_pro, group_id
+        self.corraboration_threshold = corraboration_threshold
+        self.facts_needed_for_decision = (self.NUM_FPRO+self.NUM_FCON)/self.corraboration_threshold
+
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -131,10 +139,12 @@ class Agent(object):
 
         self.group_knowledge = [[0,0,-1,-1] for i in range(numgroups)] ## Pro, con, decision made, deadline
         self.deadline = self.uncertainty_handling
-        self.facts_seen = []
+        self.goodfacts_seen = set([])
         self.decisions = 0
         self.correct_decisions = 0
-        
+ 
+        self.seen_facts = {}
+       
     def get_trust_for_neighbors( self ):
         line = ""
         for n in self.neighbors:
@@ -265,32 +275,49 @@ class Agent(object):
 
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
+
+        ## keep track of all seen facts
+        if fact not in self.seen_facts:
+            self.seen_facts[fact] = 0
+        self.seen_facts[fact] += 1
         
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
         seen = fact in self.knowledge
         if not seen:
             self.add_fact(fact, is_good)
+
         if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
             is_good = not is_good
-            
+
+        ## keep track of all seen facts and believe info seen 
+        ## more than a threshold
+        if fact not in self.seen_facts:
+            self.seen_facts[fact] = 1
+        else:
+            self.seen_facts[fact] += 1
+            if self.seen_facts[fact] >= self.corraboration_threshold:
+                is_good = True
+
         is_pro = self.is_fact_pro(fact)
         fact_group = fact / self.FACT_PER_GROUP
         
             
         # Increment signal or noise for the group's bin
         if not seen:
-            if is_good and is_pro:
-                self.group_knowledge[fact_group][0] += 1
-            elif is_good:
-                self.group_knowledge[fact_group][1] += 1
+            if is_good:
+                self.goodfacts_seen.add( fact )
+                if is_pro:
+                    self.group_knowledge[fact_group][0] += 1
+                else:
+                    self.group_knowledge[fact_group][1] += 1
             
         # If this is a new group, create deadline
         if(self.group_knowledge[fact_group][3] == -1):
             self.group_knowledge[fact_group][3] = self.deadline 
             ## this makes the deadline relative
-            ##self.group_knowledge[fact_group][3] += self.time_spent
+            self.group_knowledge[fact_group][3] += self.time_spent
            
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
@@ -313,9 +340,29 @@ class Agent(object):
         """ See if there are any decisions to be made """
         for i in range(len(self.group_knowledge)):
             if(self.group_knowledge[i][3] <= self.time_spent and self.group_knowledge[i][3] > -1 and self.group_knowledge[i][2] == -1 ): #Make decision if the deadline has passed, if a fact has been seen, and a decision hasn't already been made
-                self.group_knowledge[i][2] = (self.group_knowledge[i][0] > self.group_knowledge[i][1])
-                self.decisions += 1
-                self.correct_decisions += self.group_knowledge[i][2]
+
+                pro = self.group_knowledge[i][0]
+                con = self.group_knowledge[i][1]
+                group_known = self.goodfacts_seen & \
+                              set(range(self.FACT_PER_GROUP*i, self.FACT_PER_GROUP*(i+1)))
+                for fact in group_known:
+                    is_pro = self.is_fact_pro(fact)
+                    if self.seen_facts[fact] < self.corraboration_threshold:
+                        if is_pro:
+                            pro -= 1
+                        else:
+                            con -= 1
+
+                ## self.group_knowledge[i][2] = \
+                ##    (self.group_knowledge[i][0] > self.group_knowledge[i][1])
+                if pro+con < self.facts_needed_for_decision : ## wait some more
+                    self.group_knowledge[i][3] += (self.uncertainty_handling/2)
+                else:
+                    self.group_knowledge[i][2] = (pro > con)
+                    self.decisions += 1
+                    self.correct_decisions += self.group_knowledge[i][2]
+
+
             
     def init_outbox(self):
         """ Add all initial knowledge as a fact to send out. """
@@ -354,8 +401,8 @@ class Agent(object):
                    actions_taken.append((n, fact))
                 self.outbox = []
             elif len(self.inbox) != 0: # decision is inbox
-                eng_val = min(len(self.inbox), self.capacity*self.engagement)
-                max_val = min(len(self.inbox), self.capacity)
+                eng_val = int(min(len(self.inbox), self.capacity*self.engagement))
+                max_val = int(min(len(self.inbox), self.capacity))
                 ### Process a number of facts determined by engagement
                 for i in xrange(0, eng_val):
                     (fact, neighbor) = self.inbox[i]
