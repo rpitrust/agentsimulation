@@ -402,18 +402,22 @@ class Agent(object):
                 self.outbox = []
             elif len(self.inbox) != 0: # decision is inbox
                 eng_val = int(min(len(self.inbox), self.capacity*self.engagement))
-                max_val = int(min(len(self.inbox), self.capacity))
+                ## max_val = int(min(len(self.inbox), self.capacity))
                 ### Process a number of facts determined by engagement
                 for i in xrange(0, eng_val):
                     (fact, neighbor) = self.inbox[i]
                     self.process_fact(fact, neighbor)
                 
+                ### THIS IS REMOVED FOR NOW TO MAKE SURE COMPETENCE IS A 
+                ### VALID SIGNAL 
                 ### Send a number of facts determined by capacity
-                for i in xrange(eng_val, max_val): #SEND FACT
-                    self.send_fact(fact)
-
-                    ### Drop remaining facts
-                self.inbox = self.inbox[max_val:]
+                ### for i in xrange(eng_val, max_val): #SEND FACT
+                ###    self.send_fact(fact)
+                ###
+                ###    ### Drop remaining facts
+                ### self.inbox = self.inbox[max_val:]
+                ### END OF REMOVED AREA
+                self.inbox = self.inbox[eng_val:]
         return actions_taken  ## No send action was taken
 
     def decide_action(self) :
