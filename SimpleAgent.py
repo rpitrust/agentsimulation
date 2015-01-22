@@ -128,15 +128,17 @@ class SimpleAgent(object):
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
         known = fact in self.facts_known
-
-        self.add_fact(fact, is_good)
+        
         if random.random() > self.competence:
             ## process fact incorrectly
-            is_good = not is_good
+            thinks_good = not is_good
+        else:
+            thinks_good = is_good
         
         actions_taken = []
         ## Send to everyone, broadcast model as long as this is a new fact
-        if is_good and not known:
+        if thinks_good and not known:
+            self.add_fact(fact, is_good)
             for n in self.neighbors:
                 self.numsent += 1
                 self.history[fact].add(n)
