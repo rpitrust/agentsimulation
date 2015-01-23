@@ -47,7 +47,7 @@ def run(config_file, output_loc, is_slave, identity):
 
     i = 1
 
-    corraboration_threshold = 4
+    corroboration_threshold = 4
 
     for num_fpro in config['num_fpro']:
        for num_fcon in config['num_fcon']:
@@ -65,40 +65,41 @@ def run(config_file, output_loc, is_slave, identity):
                                              for spam in config['spamminess']:
                                                  for selfish in config['selfishness']:
                                                     for e in config['engagement']:
-                                                       for u in config ['uncertainty_handling']:
+                                                       for d in config ['decisiveness']:
                                                            for cap in config ['capacity']:
+                                                              for corroboration_threshold in config['corroboration_threshold']:
              
-                                                              print "Case", i, "being executed"
-                                                              print "running for %d/%d facts per group %d groups %d agents"\
-                                                                  %(num_fpro+num_fcon, num_npro+num_ncon, num_groups, num_agents)
-                                                              print "\t%d agents per fact "\
-                                                                  %agent_per_fact
-                                                              print "\t%s/%.1f graph for %s steps" \
-                                                                  %(graph_type, radius, num_steps)
-                                                              print "\tw:%.1f/c:%.1f/e:%.1f/u:%.1f for %d trials"\
-                                                                  %(w,c,e,u,num_trials)
-                                                              print "\tagent setup", agent_setup
-                                                              i += 1
-                                                              results = sim.run_simulation(num_fpro, \
-                                                                                           num_fcon, \
-                                                                                           num_npro,\
-                                                                                           num_ncon, \
-                                                                                           num_groups, \
-                                                                                           num_agents, \
-                                                                                           agent_per_fact,\
-                                                                                           radius, \
-                                                                                           num_steps, \
-                                                                                           w, c, e, u, \
-                                                                                           corraboration_threshold, \
-                                                                                           cap, \
-                                                                                           num_trials, \
-                                                                                           graph_type,\
-                                                                                           agent_setup,\
-                                                                                           spam, selfish,\
-                                                                                           trust_used,\
-                                                                                           inbox_trust_sorted, \
-                                                                                           trust_filter_on)
-                                                              output(output_loc, is_slave, identity, sj.dumps(results) + '\n' )
+                                                                 print "Case", i, "being executed"
+                                                                 print "running for %d/%d facts per group %d groups %d agents"\
+                                                                     %(num_fpro+num_fcon, num_npro+num_ncon, num_groups, num_agents)
+                                                                 print "\t%d agents per fact "\
+                                                                     %agent_per_fact
+                                                                 print "\t%s/%.1f graph for %s steps" \
+                                                                     %(graph_type, radius, num_steps)
+                                                                 print "\tw:%.1f/c:%.1f/e:%.1f/d:%.1f for %d trials"\
+                                                                     %(w,c,e,d,num_trials)
+                                                                 print "\tagent setup", agent_setup
+                                                                 i += 1
+                                                                 results = sim.run_simulation(num_fpro, \
+                                                                                              num_fcon, \
+                                                                                              num_npro,\
+                                                                                              num_ncon, \
+                                                                                              num_groups, \
+                                                                                              num_agents, \
+                                                                                              agent_per_fact,\
+                                                                                              radius, \
+                                                                                              num_steps, \
+                                                                                              w, c, e, d, \
+                                                                                              corroboration_threshold, \
+                                                                                              cap, \
+                                                                                              num_trials, \
+                                                                                              graph_type,\
+                                                                                              agent_setup,\
+                                                                                              spam, selfish,\
+                                                                                              trust_used,\
+                                                                                              inbox_trust_sorted, \
+                                                                                              trust_filter_on)
+                                                                 output(output_loc, is_slave, identity, sj.dumps(results) + '\n' )
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

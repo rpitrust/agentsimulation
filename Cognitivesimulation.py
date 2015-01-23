@@ -72,11 +72,11 @@ def one_step_simulation(agents):
     return num_actions
 
 
-def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
-                          NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
+def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
+                          NUM_AGENTS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                           NUM_STEPS, WILLINGNESS, COMPETENCE, CAPACITY, \
-                          ENGAGEMENT, UNCERTAINTY_HANDLING, \
-                          CORRABORATION_THRESHOLD,  \
+                          ENGAGEMENT, DECISIVENESS, \
+                          CORROBORATION_THRESHOLD,  \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
                           TRUST_USED=True, INBOX_TRUST_SORTED=False, \
@@ -89,8 +89,8 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
     agents = []
     for i in xrange(NUM_AGENTS):
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
-                                    ENGAGEMENT, UNCERTAINTY_HANDLING, \
-                                    CORRABORATION_THRESHOLD, \
+                                    ENGAGEMENT, DECISIVENESS, \
+                                    CORROBORATION_THRESHOLD, \
                                     CAPACITY, \
                                     NUM_FPRO, NUM_FCON,\
                                     NUM_NPRO, NUM_NCON, \
@@ -137,11 +137,11 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
     return all_stats
 
 
-def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
-                   NUM_GROUPS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
+def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
+                   NUM_AGENTS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                    NUM_STEPS,  WILLINGNESS, COMPETENCE, \
-                   ENGAGEMENT, UNCERTAINTY_HANDLING, \
-                   CORRABORATION_THRESHOLD, \
+                   ENGAGEMENT, DECISIVENESS, \
+                   CORROBORATION_THRESHOLD, \
                    CAPACITY,\
                    NUM_TRIAL, GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
@@ -157,8 +157,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
                                       COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                      UNCERTAINTY_HANDLING, \
-                                      CORRABORATION_THRESHOLD, \
+                                      DECISIVENESS, \
+                                      CORROBORATION_THRESHOLD, \
                                       GRAPH_TYPE,\
                                       AGENT_SETUP, \
                                       SPAMMINESS, SELFISHNESS, \
@@ -174,8 +174,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
                                           COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                          UNCERTAINTY_HANDLING, \
-                                          CORRABORATION_THRESHOLD, \
+                                          DECISIVENESS, \
+                                          CORROBORATION_THRESHOLD, \
                                           GRAPH_TYPE, \
                                           AGENT_SETUP, \
                                           SPAMMINESS, SELFISHNESS, \
@@ -199,8 +199,9 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_AGENTS, \
                         'willingness': WILLINGNESS,\
                         'competence': COMPETENCE,\
                         'engagement': ENGAGEMENT,\
-                        'uncertainty_handling': UNCERTAINTY_HANDLING,\
-                        'corraboration_threshold': CORRABORATION_THRESHOLD,\
+                        'decisiveness': DECISIVENESS,\
+                        'corroboration_threshold': CORROBORATION_THRESHOLD,\
+                        'capacity': CAPACITY,\
                         'spamminess': SPAMMINESS, \
                         'selfishness': SELFISHNESS, \
                         'trust_used': TRUST_USED,\
