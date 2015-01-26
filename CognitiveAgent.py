@@ -230,10 +230,10 @@ class Agent(object):
                          pro -= 1
                      else:
                          con -= 1
-                         
+                                                  
              ## self.group_knowledge[i][2] = \
              ##    (self.group_knowledge[i][0] > self.group_knowledge[i][1])
-             if pro+con >= min(1, self.facts_needed_for_decision) : ## wait some more
+             if pro+con >= max(1, self.facts_needed_for_decision) : ## wait some more
                  self.group_knowledge[group][2] = (pro > con)
                  self.decisions += 1
                  self.correct_decisions += self.group_knowledge[group][2]
@@ -303,8 +303,7 @@ class Agent(object):
         # Determine if the fact is valuable
         is_good = self.is_fact_valuable(fact)
         seen = fact in self.seen_facts
-        if not seen:
-            self.add_fact(fact, is_good)
+        self.add_fact(fact, is_good)
 
         if random.random() > self.competence and self.uses_knowledge:
             ## process fact incorrectly
@@ -321,15 +320,6 @@ class Agent(object):
         fact_group = fact / self.FACT_PER_GROUP
         
             
-        # Increment signal or noise for the group's bin
-        if not seen and thinks_is_good:
-            self.goodfacts_seen.add( fact )
-        if thinks_is_good:      
-           if is_pro:
-              self.group_knowledge[fact_group][0] += 1
-           else:
-              self.group_knowledge[fact_group][1] += 1
-            
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
             if sender_neighbor: ## there is a sender for the fact
@@ -341,12 +331,17 @@ class Agent(object):
                     self.all_received_facts.add((fact, sender_neighbor))
                 if len(self.last_received_facts) > self.trust_update_frequency:
                     self.process_trust()
-                    
 
-        ## Decide who to send the fact to based on spamminess and selfishness
+        if not seen and thinks_is_good:
+           self.goodfacts_seen.add( fact )
+           if is_pro:   ## increment signal or noise for the group's bin
+              self.group_knowledge[fact_group][0] += 1
+           else:
+              self.group_knowledge[fact_group][1] += 1              
+           self.send_fact(fact)
+           
         if thinks_is_good:
-            self.send_fact(fact)
-            self.make_decision(fact_group)
+           self.make_decision(fact_group)
                
     def init_outbox(self):
         """ Add all initial knowledge as a fact to send out. """
