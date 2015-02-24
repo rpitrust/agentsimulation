@@ -9,11 +9,11 @@ import networkx as nx
 
 def get_graph(objects, properties):
     graph_type = properties['graph_type']
-    n = len(objects)-1
+    n = len(objects)
     if 'num_nodes_to_attach' in properties.keys():
         k = properties['num_nodes_to_attach']
     else:
-        k = 3
+        k = 5
     r = properties['connection_probability']
 
     tries = 0
@@ -23,7 +23,7 @@ def get_graph(objects, properties):
         elif graph_type == 'erdos_renyi_graph':
             x = nx.erdos_renyi_graph(n,r)
         elif graph_type == 'watts_strogatz_graph':
-            x = nx.watts_strogatz_graph(n, k, r)
+            x = nx.watts_strogatz_graph(n, 10, r)
         elif graph_type == 'newman_watts_strogatz_graph':
             x = nx.newman_watts_strogatz_graph(n, k, r)
         elif graph_type == 'barabasi_albert_graph':

@@ -1,11 +1,11 @@
-##good test case for corroboration threshold.
-##try for different levels of decisiveness: 0.2/0.5/0.8
-## keep everything intact but increase num_trials to 100 or higher
-## keep competence low at around 0.6
-## for higher competence, there is little gain with corroboration
-## you can also run a test for competence of 0.8 to compare
-
-
+## good test cases for engagement versus decisiveness
+## when there is a lot of noise, actually high engagement reduces the network performance 
+## by multiplying the noise in the network instead of network filtering out noise slowly
+## in problem cases with high con noise, other cases or when competence is high, engagement
+## is good
+## decisiveness plays a role too:  when decisiveness is 0.8, there is less penalty for
+## high engagement as individuals have enough time to process information in the network
+## at least I think so
 
 import Cognitivesimulation as sim
 import json 
@@ -38,12 +38,13 @@ fname = 'out.txt'
 if len(sys.argv) > 1:
     fname = sys.argv[1]
 
-
 f = open(fname,"a")
 
-for decisiveness in [0.2, 0.5, 0.8]:
-    for (num_npro, num_ncon,c) in [ (10,100,0.8), (50,100,0.6) ]:
-        for corraboration_threshold in [1,2,4]:
+for decisiveness in [0.2, 0.8]:
+    for (num_npro, num_ncon,c, cap) in [ (50,100,0.6,100), (50,200,0.7,100),(10,100,0.7,100),  (40,50,0.6,100)  ]:
+        for corraboration_threshold in [1]:
+            #for corraboration_threshold in [1,2,4]:
+            for e in [0.2, 0.5, 0.8]:
                 results = sim.run_simulation(num_fpro, \
                                              num_fcon, \
                                              num_npro,\
@@ -64,8 +65,9 @@ for decisiveness in [0.2, 0.5, 0.8]:
                                              inbox_trust_sorted, \
                                              trust_filter_on)
 
-
                 f.write(sj.dumps(results) + "\n")
+
+                
 
                 infostr = "comp: %.2f, e: %.2f, good: %d/%d, bad: %d/%d, "\
                           "maxsa: %.2f, decisiveness: %.2f, agf: %d, cf: %d, capacity: %d" \
@@ -84,6 +86,5 @@ for decisiveness in [0.2, 0.5, 0.8]:
                        (i > 0 and results['decisions'][i-1] == results['decisions'][i]):
                         break
                 print infostr
-                print
-
+            print "*"*40
 
