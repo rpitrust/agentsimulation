@@ -309,7 +309,7 @@ class Agent(object):
 
         ## keep track of all seen facts and believe info seen 
         ## more than a threshold
-        if self.agents_needed_for_corroboration > 0 and \
+        if self.agents_needed_for_corroboration > 1 and \
            self.seen_facts[fact] >= self.agents_needed_for_corroboration:
             thinks_is_good = True
 
@@ -331,7 +331,8 @@ class Agent(object):
 
         # Increment signal or noise for the group's bin
         if (not seen and thinks_is_good) or  \
-           (not fact in self.goodfacts_seen and self.seen_facts[fact] == self.agents_needed_for_corroboration):
+           (not fact in self.goodfacts_seen and self.seen_facts[fact] == self.agents_needed_for_corroboration
+                                            and self.seen_facts[fact] > 1):
             self.goodfacts_seen.add( fact )
             if is_pro:
                self.group_knowledge[fact_group][0] += 1
