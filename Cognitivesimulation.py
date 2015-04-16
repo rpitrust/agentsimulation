@@ -54,6 +54,31 @@ def change_agent_property(agents, setup):
     if 'selfish' in setup.keys():
         for i in xrange(cutoff):
             agents[who[i]].selfish = setup['selfish']
+            
+def change_agent_property_strict(agents, setup):
+    """
+    Setup is a dictionary with a parameter as a key,
+    and the value is an array containing two items,
+    the new value for the parameter and a list of agents to update
+    """
+    
+    if 'competence' in setup.keys():
+       for i in setup['competence'][1]:
+          agents[i].competence = setup['competence'][0]
+    if 'engagement' in setup.keys():
+       for i in setup['engagement'][1]:
+          agents[i].engagement = setup['engagement'][0]
+    if 'decisiveness' in setup.keys():
+       for i in setup['decisiveness'][1]:
+          agents[i].decisiveness = setup['decisiveness'][0]
+    if 'closedmindedness' in setup.keys():
+       for i in setup['closedmindedness'][1]:
+          agents[i].closedmindedness = setup['closedmindedness'][0]
+    if 'corroboration_threshold' in setup.keys():
+       for i in setup['corroboration_threshold'][1]:
+          agents[i].corroboration_threshold = setup['corroboration_threshold'][0]
+    
+   
 
 
 ########## Run simulation
@@ -74,8 +99,8 @@ def one_step_simulation(agents):
 
 def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                           NUM_AGENTS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
-                          NUM_STEPS, WILLINGNESS, COMPETENCE, CAPACITY, \
-                          ENGAGEMENT, DECISIVENESS, \
+                          NUM_STEPS, WILLINGNESS, COMPETENCE, DISP, CAPACITY, \
+                          ENGAGEMENT, DECISIVENESS, CM, \
                           CORROBORATION_THRESHOLD,  \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
@@ -89,9 +114,9 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
     agents = []
     for i in xrange(NUM_AGENTS):
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
-                                    ENGAGEMENT, DECISIVENESS, \
+                                    ENGAGEMENT, DECISIVENESS, CM, \
                                     CORROBORATION_THRESHOLD, \
-                                    CAPACITY, \
+                                    DISP, CAPACITY, \
                                     NUM_FPRO, NUM_FCON,\
                                     NUM_NPRO, NUM_NCON, \
                                     NUM_GROUPS, \
@@ -102,7 +127,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
     ## Now, change the properties of some agents 
     ## based on the agent setup data
     for setup in AGENT_SETUP: ## each setup is a dictionary
-        change_agent_property(agents, setup)
+        change_agent_property_strict(agents, setup)
 
     ##print "Created" , len(agents), "agents"
 
@@ -140,9 +165,9 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
 def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                    NUM_AGENTS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                    NUM_STEPS,  WILLINGNESS, COMPETENCE, \
-                   ENGAGEMENT, DECISIVENESS, \
+                   ENGAGEMENT, DECISIVENESS, CM,\
                    CORROBORATION_THRESHOLD, \
-                   CAPACITY,\
+                   DISP, CAPACITY,\
                    NUM_TRIAL, GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
@@ -156,8 +181,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                                       AGENT_PER_FACT,\
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
-                                      COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                      DECISIVENESS, \
+                                      COMPETENCE, DISP, CAPACITY, ENGAGEMENT, \
+                                      DECISIVENESS, CM, \
                                       CORROBORATION_THRESHOLD, \
                                       GRAPH_TYPE,\
                                       AGENT_SETUP, \
@@ -173,8 +198,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                                           AGENT_PER_FACT, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
-                                          COMPETENCE, CAPACITY, ENGAGEMENT, \
-                                          DECISIVENESS, \
+                                          COMPETENCE, DISP, CAPACITY, ENGAGEMENT, \
+                                          DECISIVENESS, CM,\
                                           CORROBORATION_THRESHOLD, \
                                           GRAPH_TYPE, \
                                           AGENT_SETUP, \
@@ -200,7 +225,9 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                         'competence': COMPETENCE,\
                         'engagement': ENGAGEMENT,\
                         'decisiveness': DECISIVENESS,\
+                        'closedmindedness': CM,\
                         'corroboration_threshold': CORROBORATION_THRESHOLD,\
+                        'predisposition': DISP,\
                         'capacity': CAPACITY,\
                         'spamminess': SPAMMINESS, \
                         'selfishness': SELFISHNESS, \

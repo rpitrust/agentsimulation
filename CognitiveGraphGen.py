@@ -32,6 +32,8 @@ def get_graph(objects, properties):
             x = nx.powerlaw_cluster_graph(n, k, r)
         elif graph_type == 'cycle_graph':
             x = nx.cycle_graph(n)
+        elif graph_type == 'hierarchical':
+            x = hierarchy_graph(objects)
         else: ##Star by default
             x = nx.star_graph(len(objects)-1)
         tries += 1
@@ -127,20 +129,19 @@ def collaborative_graph(objects):
             
     return conn
 
+#Create a fulll, five layer bitree. 
+#This can be adjusted later to be an arbitrary number of layers and arbitrary number of children
 def hierarchy_graph(objects):
     conn = nx.DiGraph()
-    counter = 0
-    ##Link bottom layer to middle layer
-    for object in objects[5:]:
-        conn.add_edge(object,objects[counter+1])
-        conn.node[object]['rank'] = 2
-        counter = (counter + 1) % 4
+    conn.add_nodes_from(range(31)) #Five layers, so (2^5)-1 agents
 
-    ##Link middle layer to root
-    for object in objects[1:5]:
-        conn.add_edge(object, objects[0])
-        conn.node[object]['rank'] = 1
-    conn.node[objects[0]]['rank'] = 0
-
+    ##Connect each agent to its parent
+    for layer in range(1,5): #Skip layer 0, root has no parent
+       prev_layer = pow(2,layer-1)-1
+       curr_layer = pow(2,layer)-1
+       for employee in range(curr_layer+1): #Number of agents in a layer is one more than the ID of the first agent in the layer
+          conn.add_edge(employee+curr_layer, employee/2 + prev_layer)
+       
+    
     return conn
 

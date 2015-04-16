@@ -16,14 +16,15 @@ import simplejson as sj
 num_fpro = 50
 num_fcon = 40
 num_groups = 1
-num_agents = 20
+num_agents = 31
 agent_per_fact = 3
-num_steps = 10000
+num_steps = 100
 w = 1
+c = 0.7
 cap = 100
 num_trials = 100
 #graph_type = "spatial_random"
-graph_type = "newman_watts_strogatz_graph"
+graph_type = "hierarchical"
 radius = 0.2
 agent_setup = []
 spam = 0
@@ -32,19 +33,31 @@ trust_used = False
 inbox_trust_sorted = False
 trust_filter_on  = False
 e = 0.8
-corraboration_threshold = 1
-fname = 'out.txt'
+decisiveness = 0.8
+corroboration_threshold = 1
+fname = 'hier.txt'
+cm = 0
+disp = 0
 
+params = {'competence' : [0.5,0.7,0.9],
+#          'engagement' : [0.2,0.5,0.8],
+#          'decisiveness' : [0.7, 0.8, 0.9],
+#          'closedmindedness' : [0.0,0.5,1.0],
+#          'corroboration_threshold' : [1,2,3], 
+         }
+         
 if len(sys.argv) > 1:
     fname = sys.argv[1]
 
 f = open(fname,"a")
 
-for decisiveness in [0.2, 0.8]:
-    for (num_npro, num_ncon,c, cap) in [ (50,100,0.6,100), (50,200,0.7,100),(10,100,0.7,100),  (40,50,0.6,100)  ]:
-        for corraboration_threshold in [1]:
-            #for corraboration_threshold in [1,2,4]:
-            for e in [0.2, 0.5, 0.8]:
+for param in params.keys():
+   for value in params[param]:
+      for layer in range(5):
+        change_list = [value]
+        change_list.append(range(pow(2,layer)-1,pow(2,layer+1)-1))
+        agent_setup = [{param : change_list}]
+        for (num_npro, num_ncon) in [ (150,0), (125,25),(100,50),  (75,75), (50,100), (25,125), (0,150)  ]:
                 results = sim.run_simulation(num_fpro, \
                                              num_fcon, \
                                              num_npro,\
@@ -54,8 +67,9 @@ for decisiveness in [0.2, 0.8]:
                                              agent_per_fact,\
                                              radius, \
                                              num_steps, \
-                                             w, c, e, decisiveness, \
-                                             corraboration_threshold, \
+                                             w, c, e, decisiveness, cm, \
+                                             corroboration_threshold, \
+                                             disp, \
                                              cap, \
                                              num_trials, \
                                              graph_type,\
@@ -73,7 +87,7 @@ for decisiveness in [0.2, 0.8]:
                           "maxsa: %.2f, decisiveness: %.2f, agf: %d, cf: %d, capacity: %d" \
                           %(c, e, num_fpro, num_npro, num_fcon, num_ncon, \
                             results['all_sa'][-1][0]/90.,\
-                            decisiveness, agent_per_fact, corraboration_threshold, cap)
+                            decisiveness, agent_per_fact, corroboration_threshold, cap)
                 print infostr
                 infostr = "correct/all: "
                 for i in range(0,len(results['decisions'])):
@@ -86,5 +100,4 @@ for decisiveness in [0.2, 0.8]:
                        (i > 0 and results['decisions'][i-1] == results['decisions'][i]):
                         break
                 print infostr
-            print "*"*40
 
