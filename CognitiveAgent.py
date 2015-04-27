@@ -54,7 +54,7 @@ from simutil import *
 class Agent(object):
 
     def __init__ (self, w=1, c=1, e=1, d=1, cm=1, corroboration_threshold = 4, \
-                  predisp = -1, capacity=1,\
+                  predisp = -1, capacity=1, out_capacity = 5,\
                   numfpro = 0, numfcon=0, numnpro = 0, numncon = 0, \
                   numgroups = 0, \
                   spammer=0, selfish=0,  \
@@ -79,6 +79,7 @@ class Agent(object):
         self.selfish = selfish
         self.spammer = spammer
         self.capacity = capacity
+        self.out_capacity = out_capacity
         self.trust_filter_on = trust_filter_on
         self.uses_knowledge = uses_knowledge 
         # for hierarchy, all facts are considered valuable without
@@ -94,7 +95,6 @@ class Agent(object):
         ## all facts sent once to someone, used for performance optimization
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
-        self.facts_known = set([])
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -107,15 +107,15 @@ class Agent(object):
         
         ## Cognitive differences
         self.group_knowledge = [[0,0,-1] for i in range(numgroups)] ## Pro, con, decision made
-        self.goodfacts_seen = set([])
         self.decisions = 0
         self.correct_decisions = 0
 
         ## keeping track of how many times facts are seen
         self.seen_facts = {}  ##keys: fact, is_good, is_pro, group_id
+        self.facts_known = set([])
+        self.used_facts = set([])
         self.corroboration_threshold = corroboration_threshold
         self.facts_needed_for_decision = (self.FACT_PER_GROUP)*(1-self.decisiveness) #even if this is 0, decision won't be made until first fact is received
-        self.seen_fact_sequence = []
 
     def clear (self):
         """Clears all history, but leaves intact personal properties."""
@@ -126,7 +126,6 @@ class Agent(object):
         ## all facts sent once to someone, used for performance optimization
         self.sentfacts = set([])  
         self.numsent = 0 ## number of facts sent
-        self.facts_known = set([]) ## id of all valuable facts known
         self.history = {} ## key:fact, value: set of neighbors fact is sent to
         self.time_spent = 0 ## simulation time, number of times act is executed
         self.trust_update_frequency = 10
@@ -137,12 +136,12 @@ class Agent(object):
         self.num_filtered = 0
 
         self.group_knowledge = [[0,0,-1] for i in range(numgroups)] ## Pro, con, decision made
-        self.goodfacts_seen = set([])
         self.decisions = 0
         self.correct_decisions = 0
  
         self.seen_facts = {}
-        self.seen_fact_sequence = []
+        self.facts_known = set([])
+        self.used_facts = set([])
        
     def get_trust_for_neighbors( self ):
         line = ""
@@ -150,15 +149,16 @@ class Agent(object):
             line += "%d/%r " %(self.trust[n].trust, self.trust[n].is_trusted)
         return line
 
-    def add_fact(self, fact, is_good):
+    def add_fact(self, fact, thinks_is_good):
         """ Add fact to knowledge. """
-        if is_good:
-            self.facts_known.add(fact)
         if fact not in self.seen_facts:
-            self.seen_facts[fact] = 1
+           self.seen_facts[fact] = 1
         else:
-            self.seen_facts[fact] += 1
-        self.seen_fact_sequence.append(fact)
+           self.seen_facts[fact] += 1
+        if thinks_is_good:
+           self.used_facts.add(fact)
+        if self.is_fact_valuable(fact):
+           self.facts_known.add(fact)
 
     def connect_to(self, neighbors, \
                    prior_comp = ('M','M'), \
@@ -223,31 +223,14 @@ class Agent(object):
         """ See if it's time to make a decision for the group """
         pro = self.group_knowledge[group][0]
         con = self.group_knowledge[group][1]
-        pro_cf = pro
-        con_cf = con
-        group_known = self.goodfacts_seen & \
-                      set(range(self.FACT_PER_GROUP*group, self.FACT_PER_GROUP*(group+1)))
-        for fact in group_known:
-            is_pro = self.is_fact_pro(fact)
-            if self.seen_facts[fact] < self.corroboration_threshold:
-                if is_pro:
-                    pro_cf -= self.seen_facts[fact]
-                else:
-                    con_cf -= self.seen_facts[fact]
-                   
-        ## self.group_knowledge[i][2] = \
-        ##    (self.group_knowledge[i][0] > self.group_knowledge[i][1])
-        if pro+con >= max(1, self.facts_needed_for_decision):
-            #self.group_knowledge[group][2] = (pro > con)
-            if self.group_knowledge[group][2] == -1:
-                self.group_knowledge[group][2] = (pro_cf > con_cf)
-                self.decisions += 1
-                self.correct_decisions += self.group_knowledge[group][2]
-            elif not self.group_knowledge[group][2]:
-                self.group_knowledge[group][2] = (pro_cf > con_cf)
-                self.correct_decisions = self.group_knowledge[group][2]
 
-
+        if pro+con >= max(1, self.facts_needed_for_decision): # Are we ready to make a decision?
+           if not self.group_knowledge[group][2] == -1: # If we're changing our decision, stop counting old one
+              self.correct_decisions -= self.group_knowledge[group][2]
+           else: # If we're making a new decision, add to metric 
+              self.decisions += 1
+           self.group_knowledge[group][2] = (pro > con)
+           self.correct_decisions += self.group_knowledge[group][2]
             
     def send_fact(self, fact):
         is_pro = self.is_fact_pro(fact)
@@ -309,10 +292,10 @@ class Agent(object):
     def check_cm(self, is_pro, fact_group):
         ## checks the close mindedness against disposition and decision
         
-        ## made a decision already, and factoid agrees
+        ## made a decision already, and factoid disagrees
         if self.group_knowledge[fact_group][2] != -1 and self.group_knowledge[fact_group][2] != is_pro:
            return random.random() >= self.closedminded
-        ## haven't made a decision yet, and factoid agrees with disposition
+        ## haven't made a decision yet, and factoid disagrees with disposition
         if self.group_knowledge[fact_group][2] == -1 and self.disposition != -1 and \
            self.disposition != is_pro:
            return random.random() >= self.closedminded
@@ -322,30 +305,34 @@ class Agent(object):
     def process_fact(self, fact, sender_neighbor):
         ## sender_neighbor is None if the fact is from initial inbox 
 
-        # Determine if the fact is valuable
+        ## get some data on the fact
         is_good = self.is_fact_valuable(fact)
         seen = fact in self.seen_facts
-        if not seen:
-            self.add_fact(fact, is_good)
-
-        if random.random() > self.competence and self.uses_knowledge:
-            ## process fact incorrectly
-            thinks_is_good = not is_good
-        else:
-            thinks_is_good = is_good
-
         is_pro = self.is_fact_pro(fact)
         fact_group = fact / self.FACT_PER_GROUP
+
+        # Determine if the fact is valuable
+        thinks_is_good = False
+        if not seen:
+           if random.random() > self.competence and self.uses_knowledge:
+              ## process fact incorrectly
+              thinks_is_good = not is_good
+           else:
+              thinks_is_good = is_good
+
 
         # Check if we should drop fact due to closed-mindedness
         if not self.check_cm(is_pro, fact_group):
             thinks_is_good = False
 
+        self.add_fact(fact, thinks_is_good)
+
         ## keep track of all seen facts and believe info seen 
         ## more than a threshold
         if self.corroboration_threshold > 1 and \
-           self.seen_facts[fact] >= self.corroboration_threshold:
-            thinks_is_good = True
+           self.seen_facts[fact] == self.corroboration_threshold and \
+           fact not in self.used_facts:
+              thinks_is_good = True
 
         # If trust is considered, add this fact as evidence and spamminess
         if self.trust_used:
@@ -360,16 +347,14 @@ class Agent(object):
                     self.process_trust()
 
         # Increment signal or noise for the group's bin
-        if not seen and thinks_is_good:
-            self.goodfacts_seen.add( fact )
-        if thinks_is_good:      
-            if is_pro:
-               self.group_knowledge[fact_group][0] += 1
-            else:
-               self.group_knowledge[fact_group][1] += 1
+        if thinks_is_good:
+           if is_pro:
+              self.group_knowledge[fact_group][0] += 1
+           else:
+              self.group_knowledge[fact_group][1] += 1
             
         ## Decide who to send the fact to based on spamminess and selfishness
-        if thinks_is_good and (self.seen_facts[fact] == self.corroboration_threshold or not seen):
+        if thinks_is_good:
             self.send_fact(fact)
         self.make_decision(fact_group)
                
@@ -397,7 +382,7 @@ class Agent(object):
             decision = self.decide_action()
             if decision == 'outbox':
                 ### Send entire outbox
-                for j in xrange(len(self.outbox)):
+                for j in xrange(min(len(self.outbox),self.out_capacity)):
                    self.numsent += 1
                    (trust, fact, n) =  self.outbox[j]
                    if fact in self.sentfacts:
@@ -406,7 +391,7 @@ class Agent(object):
                        self.history[fact] = set([n])
                    self.sentfacts.add(fact)
                    actions_taken.append((n, fact))
-                self.outbox = []
+                self.outbox = self.outbox[self.out_capacity:]
             elif len(self.inbox) != 0: # decision is inbox
                 eng_val = int(min(len(self.inbox), self.capacity*self.engagement))
                 ## max_val = int(min(len(self.inbox), self.capacity))

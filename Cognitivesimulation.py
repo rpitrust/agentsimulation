@@ -100,7 +100,7 @@ def one_step_simulation(agents):
 def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                           NUM_AGENTS, AGENT_PER_FACT, CONNECTION_PROBABILITY, \
                           NUM_STEPS, WILLINGNESS, COMPETENCE, DISP, CAPACITY, \
-                          ENGAGEMENT, DECISIVENESS, CM, \
+                          OUT_CAPACITY, ENGAGEMENT, DECISIVENESS, CM, \
                           CORROBORATION_THRESHOLD,  \
                           GRAPH_TYPE, AGENT_SETUP=[], \
                           SPAMMINESS=0, SELFISHNESS=0, \
@@ -116,7 +116,7 @@ def multi_step_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
         agents.append ( Agent.Agent(WILLINGNESS, COMPETENCE, \
                                     ENGAGEMENT, DECISIVENESS, CM, \
                                     CORROBORATION_THRESHOLD, \
-                                    DISP, CAPACITY, \
+                                    DISP, OUT_CAPACITY, CAPACITY, \
                                     NUM_FPRO, NUM_FCON,\
                                     NUM_NPRO, NUM_NCON, \
                                     NUM_GROUPS, \
@@ -167,7 +167,7 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                    NUM_STEPS,  WILLINGNESS, COMPETENCE, \
                    ENGAGEMENT, DECISIVENESS, CM,\
                    CORROBORATION_THRESHOLD, \
-                   DISP, CAPACITY,\
+                   DISP, OUT_CAPACITY, CAPACITY,\
                    NUM_TRIAL, GRAPH_TYPE, AGENT_SETUP=[], \
                    SPAMMINESS=0, SELFISHNESS=0, \
                    TRUST_USED=True, INBOX_TRUST_SORTED = False,\
@@ -181,7 +181,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                                       AGENT_PER_FACT,\
                                       CONNECTION_PROBABILITY,\
                                       NUM_STEPS, WILLINGNESS,\
-                                      COMPETENCE, DISP, CAPACITY, ENGAGEMENT, \
+                                      COMPETENCE, DISP, \
+                                      OUT_CAPACITY, CAPACITY, ENGAGEMENT, \
                                       DECISIVENESS, CM, \
                                       CORROBORATION_THRESHOLD, \
                                       GRAPH_TYPE,\
@@ -198,7 +199,8 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                                           AGENT_PER_FACT, \
                                           CONNECTION_PROBABILITY,\
                                           NUM_STEPS, WILLINGNESS,\
-                                          COMPETENCE, DISP, CAPACITY, ENGAGEMENT, \
+                                          COMPETENCE, DISP, \
+                                          OUT_CAPACITY, CAPACITY, ENGAGEMENT, \
                                           DECISIVENESS, CM,\
                                           CORROBORATION_THRESHOLD, \
                                           GRAPH_TYPE, \
@@ -229,6 +231,7 @@ def run_simulation(NUM_FPRO, NUM_FCON, NUM_NPRO, NUM_NCON, NUM_GROUPS, \
                         'corroboration_threshold': CORROBORATION_THRESHOLD,\
                         'predisposition': DISP,\
                         'capacity': CAPACITY,\
+                        'out_capacity': OUT_CAPACITY,\
                         'spamminess': SPAMMINESS, \
                         'selfishness': SELFISHNESS, \
                         'trust_used': TRUST_USED,\
