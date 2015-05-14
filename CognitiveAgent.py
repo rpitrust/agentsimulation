@@ -226,7 +226,7 @@ class Agent(object):
         con = self.group_knowledge[group][1]
 
         if pro+con >= max(1, self.facts_needed_for_decision) and \
-           abs(pro-con)/(pro+con) >= self.disc_w_ambig: # Are we ready to make a decision?
+           abs(pro-con)/(pro+con) <= self.disc_w_ambig: # Are we ready to make a decision?
            if not self.group_knowledge[group][2] == -1: # If we're changing our decision, stop counting old one
               self.correct_decisions -= self.group_knowledge[group][2]
            else: # If we're making a new decision, add to metric 
