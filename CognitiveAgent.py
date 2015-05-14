@@ -54,7 +54,7 @@ from simutil import *
 class Agent(object):
 
     def __init__ (self, w=1, c=1, e=1, d=1, cm=1, corroboration_threshold = 4, \
-                  predisp = -1, capacity=1, out_capacity = 5,\
+                  disc_w_ambig = 0, predisp = -1, capacity=1, out_capacity = 5,\
                   numfpro = 0, numfcon=0, numnpro = 0, numncon = 0, \
                   numgroups = 0, \
                   spammer=0, selfish=0,  \
@@ -76,6 +76,7 @@ class Agent(object):
         self.decisiveness = d
         self.closedminded = cm
         self.disposition = predisp
+        self.disc_w_ambig = disc_w_ambig
         self.selfish = selfish
         self.spammer = spammer
         self.capacity = capacity
@@ -224,7 +225,8 @@ class Agent(object):
         pro = self.group_knowledge[group][0]
         con = self.group_knowledge[group][1]
 
-        if pro+con >= max(1, self.facts_needed_for_decision): # Are we ready to make a decision?
+        if pro+con >= max(1, self.facts_needed_for_decision) and \
+           abs(pro-con)/(pro+con) >= self.disc_w_ambig: # Are we ready to make a decision?
            if not self.group_knowledge[group][2] == -1: # If we're changing our decision, stop counting old one
               self.correct_decisions -= self.group_knowledge[group][2]
            else: # If we're making a new decision, add to metric 
